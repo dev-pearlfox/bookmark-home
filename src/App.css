@@ -1,0 +1,23 @@
+.pf-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-main {
+  flex: 1;
+  min-height: 0;
+  display: block;
+  padding: 10px 24px 24px;
+}
+
+.pf-cols-scroll {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+@media (max-width: 900px) {
+  .pf-main { padding: 8px 12px 24px; }
+}

@@ -1,0 +1,462 @@
+.pf-cols-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Vertical stack of horizontal category bands (Netflix-shelves style) */
+.pf-cols {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 120px;
+}
+
+.pf-cols__slot {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+}
+
+/* A category band */
+.pf-col {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 12px 32px;
+  border-radius: var(--r-lg);
+  background: var(--surface-glass);
+  border: var(--border-glass);
+  box-shadow: var(--shadow-soft), var(--shadow-inner);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  transition: box-shadow var(--dur) var(--ease-out), transform var(--dur) var(--ease-out);
+  min-height: 128px;
+}
+
+/* Color accent stripe on the LEFT edge of each band */
+.pf-col::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 12px; bottom: 12px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--pf-lilac);
+  opacity: 0.75;
+  z-index: 1;
+}
+
+.pf-col--pink::before   { background: var(--pf-pink);  }
+.pf-col--lilac::before  { background: var(--pf-lilac); }
+.pf-col--sky::before    { background: var(--pf-sky);   }
+.pf-col--mint::before   { background: var(--pf-mint);  }
+.pf-col--peach::before  { background: var(--pf-peach); }
+.pf-col--lemon::before  { background: var(--pf-lemon); }
+.pf-col--rose::before   { background: var(--pf-rose);  }
+
+.pf-col.is-over {
+  box-shadow: 0 0 0 2px rgba(180, 160, 240, 0.55), var(--shadow-lift);
+  background: var(--surface-glass-strong);
+}
+
+.pf-col.is-dragging {
+  z-index: 5;
+  box-shadow: var(--shadow-lift);
+}
+
+/* Left-side drag handle */
+.pf-col__grip {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 40px;
+  padding: 0;
+  border-radius: 8px;
+  color: var(--ink-500);
+  background: rgba(255,255,255,0.55);
+  border: var(--border-soft);
+  opacity: 0;
+  cursor: grab;
+  transition: opacity var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+  touch-action: none;
+  z-index: 2;
+}
+.pf-col:hover .pf-col__grip { opacity: 1; }
+.pf-col__grip:hover {
+  color: var(--ink-900);
+  background: var(--surface-hover);
+  transform: translate(-1px, -50%);
+}
+.pf-col__grip:active { cursor: grabbing; }
+
+/* Header row (icon + name + count + edit hint) */
+.pf-col__head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 2px 4px;
+}
+
+.pf-col__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+  padding: 2px 6px 2px 3px;
+  border-radius: 8px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+  text-align: left;
+}
+
+.pf-col__title:hover { background: rgba(255,255,255,0.6); }
+.pf-col__title:hover .pf-col__edit-hint { opacity: 1; transform: translateY(0); }
+
+.pf-col__edit-hint {
+  display: inline-grid;
+  place-items: center;
+  color: var(--ink-300);
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.pf-col__icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  background: var(--pf-lilac);
+  color: var(--ink-900);
+  box-shadow: var(--shadow-inner);
+}
+
+.pf-col--pink   .pf-col__icon { background: var(--pf-pink);  }
+.pf-col--lilac  .pf-col__icon { background: var(--pf-lilac); }
+.pf-col--sky    .pf-col__icon { background: var(--pf-sky);   }
+.pf-col--mint   .pf-col__icon { background: var(--pf-mint);  }
+.pf-col--peach  .pf-col__icon { background: var(--pf-peach); }
+.pf-col--lemon  .pf-col__icon { background: var(--pf-lemon); }
+.pf-col--rose   .pf-col__icon { background: var(--pf-rose);  }
+
+.pf-col__name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf-col__count {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-500);
+  background: rgba(255,255,255,0.7);
+  padding: 1px 7px;
+  border-radius: 999px;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Body — horizontal shelf of bookmarks + add slot */
+.pf-col__body {
+  flex: 1;
+  min-height: 68px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  padding: 4px 2px 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+}
+
+.pf-col__body .pf-card {
+  flex: none;
+  width: 232px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  scroll-snap-align: start;
+}
+.pf-col__body .pf-card__favicon { width: 32px; height: 32px; border-radius: 9px; }
+.pf-col__body .pf-card__favicon img { width: 20px; height: 20px; }
+
+/* Inline "next-slot" plus tile — sits at the END of the horizontal shelf */
+.pf-col__slot {
+  flex: none;
+  width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 14px;
+  color: var(--ink-500);
+  background: rgba(255,255,255,0.35);
+  border: 1.5px dashed rgba(140, 120, 200, 0.35);
+  transition: transform var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 500;
+  scroll-snap-align: end;
+}
+
+.pf-col__slot-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--pf-pink), var(--pf-lilac));
+  box-shadow: var(--shadow-inner);
+  flex: none;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.pf-col__slot-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf-col__slot:hover {
+  color: var(--ink-900);
+  background: var(--surface-hover);
+  border-color: rgba(140, 120, 200, 0.55);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+.pf-col__slot:hover .pf-col__slot-icon { transform: rotate(90deg) scale(1.05); }
+
+/* Add-category band at the bottom of the stack */
+.pf-col--add {
+  background: transparent;
+  border: 1.5px dashed rgba(140, 120, 200, 0.35);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 14px 16px;
+  min-height: 96px;
+  transition: background var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out);
+}
+.pf-col--add::before { display: none; }
+
+.pf-col--add:hover {
+  background: rgba(255,255,255,0.35);
+  border-color: rgba(140, 120, 200, 0.6);
+}
+
+.pf-col__add-cta {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 8px;
+  border-radius: var(--r-md);
+  color: var(--ink-500);
+  background: transparent;
+  transition: color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  text-align: left;
+}
+
+.pf-col__add-cta:hover { color: var(--ink-900); transform: translateY(-1px); }
+.pf-col__add-cta:hover .pf-col__add-icon { transform: rotate(-4deg) scale(1.05); }
+.pf-col__add-cta:hover .pf-col__add-plus { transform: rotate(90deg) scale(1.05); }
+
+.pf-col__add-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--pf-pink), var(--pf-lilac));
+  box-shadow: var(--shadow-inner), 0 6px 16px -10px rgba(120, 90, 200, 0.4);
+  transition: transform var(--dur) var(--ease-out);
+  flex: none;
+}
+
+.pf-col__add-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: inherit;
+  display: block;
+}
+
+.pf-col__add-sub {
+  font-size: 12px;
+  color: var(--ink-300);
+  display: block;
+  margin-top: 2px;
+}
+
+.pf-col__add-plus {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--ink-900);
+  background: rgba(255,255,255,0.65);
+  border: var(--border-soft);
+  box-shadow: var(--shadow-inner);
+  transition: transform var(--dur) var(--ease-out);
+  flex: none;
+}
+
+/* Global "no matches" banner shown above the bands */
+.pf-cols-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  color: var(--ink-500);
+}
+
+.pf-cols-empty__icon {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--pf-pink), var(--pf-lilac));
+  color: var(--ink-900);
+}
+
+.pf-cols-empty p { margin: 0; }
+
+@media (max-width: 700px) {
+  .pf-col__body .pf-card { width: 210px; }
+  .pf-col__slot { width: 180px; }
+}
+
+/* ============================================================
+   HORIZONTAL layout — categories side-by-side (Kanban columns).
+   Overrides for the vertical (default) rules above.
+   ============================================================ */
+.pf-cols[data-layout="horizontal"] {
+  flex-direction: row;
+  display: grid;
+  grid-auto-flow: column;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+}
+
+.pf-cols[data-layout="horizontal"] .pf-cols__slot {
+  scroll-snap-align: start;
+}
+
+.pf-col[data-layout="horizontal"] {
+  padding: 22px 12px 12px;
+  gap: 10px;
+  min-height: 560px;
+  max-height: calc(100vh - 100px);
+}
+
+/* Move the color stripe from left edge → top edge in horizontal mode */
+.pf-col[data-layout="horizontal"]::before {
+  left: 12px;
+  right: 12px;
+  top: 0;
+  bottom: auto;
+  width: auto;
+  height: 3px;
+  border-radius: 0 0 6px 6px;
+}
+
+/* Grip: was left-center → move to top-center */
+.pf-col[data-layout="horizontal"] .pf-col__grip {
+  left: 50%;
+  top: 3px;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 14px;
+}
+.pf-col[data-layout="horizontal"] .pf-col__grip:hover {
+  transform: translate(-50%, -1px);
+}
+
+/* Body: horizontal shelf → single vertical stack inside each kanban column */
+.pf-col[data-layout="horizontal"] .pf-col__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-snap-type: none;
+  min-height: 60px;
+}
+
+.pf-col[data-layout="horizontal"] .pf-col__body .pf-card {
+  width: auto;
+  flex: none;
+  scroll-snap-align: none;
+}
+
+.pf-col[data-layout="horizontal"] .pf-col__slot {
+  width: auto;
+  scroll-snap-align: none;
+}
+
+.pf-cols[data-layout="horizontal"] {
+  grid-auto-columns: minmax(224px, 1fr);
+}
+
+/* Add-category placeholder: horizontal band → tall column */
+.pf-col--add[data-layout="horizontal"] {
+  padding: 12px;
+  min-height: 560px;
+}
+.pf-col--add[data-layout="horizontal"] .pf-col__add-cta {
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 22px 16px;
+  text-align: center;
+}
+.pf-col--add[data-layout="horizontal"] .pf-col__add-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  margin-bottom: 4px;
+}
+.pf-col--add[data-layout="horizontal"] .pf-col__add-sub {
+  text-align: center;
+  max-width: 200px;
+}
+.pf-col--add[data-layout="horizontal"] .pf-col__add-plus {
+  margin: 10px 0 0;
+}

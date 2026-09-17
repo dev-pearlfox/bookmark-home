@@ -1,0 +1,111 @@
+.pf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 22px;
+  border-radius: var(--r-lg);
+  margin: 18px 24px 8px;
+}
+
+.pf-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+
+
+.pf-header__logo {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--pf-pink), var(--pf-lilac));
+  color: var(--ink-900);
+  box-shadow: var(--shadow-inner), 0 6px 16px -8px rgba(120, 100, 200, 0.4);
+}
+
+.pf-header__titles h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.pf-header__titles p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-500);
+}
+
+.pf-header__titles p span {
+  color: var(--ink-900);
+  font-weight: 600;
+}
+
+.pf-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.pf-layout-toggle {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-700);
+  background: var(--surface-frost);
+  border: var(--border-soft);
+  transition: background var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+.pf-layout-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--ink-900);
+  transform: translateY(-1px);
+}
+
+.pf-header__search {
+  flex: 1;
+  max-width: 460px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--surface-frost);
+  border: var(--border-soft);
+  transition: box-shadow var(--dur) var(--ease-out), background var(--dur) var(--ease-out);
+}
+
+.pf-header__search:focus-within {
+  background: var(--surface-hover);
+  box-shadow: 0 0 0 4px rgba(180, 160, 240, 0.25);
+}
+
+.pf-header__search svg { color: var(--ink-500); flex: none; }
+
+.pf-header__search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--ink-900);
+}
+
+.pf-header__search input::placeholder { color: var(--ink-300); }
+
+@media (max-width: 720px) {
+  .pf-header { flex-direction: column; align-items: stretch; gap: 12px; margin: 12px; }
+  .pf-header__search { max-width: none; }
+  .pf-header__actions { flex-direction: column; align-items: stretch; }
+}

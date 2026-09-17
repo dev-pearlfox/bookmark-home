@@ -1,0 +1,137 @@
+/* BookmarkCard styles. Used inside columns and the drag overlay. */
+
+.pf-card {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--surface-glass);
+  border: var(--border-glass);
+  box-shadow: var(--shadow-soft), var(--shadow-inner);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  transition: transform var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out);
+  cursor: grab;
+  touch-action: none; /* let @dnd-kit own the pointer on touch */
+  user-select: none;
+}
+
+.pf-card:hover {
+  transform: translateY(-2px);
+  background: var(--surface-hover);
+  box-shadow: var(--shadow-lift), var(--shadow-inner);
+}
+
+.pf-card:active { cursor: grabbing; }
+
+.pf-card--overlay {
+  transform: rotate(-2deg) scale(1.03);
+  box-shadow: var(--shadow-lift);
+  cursor: grabbing;
+}
+
+.pf-card__body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  /* Keep the link's own cursor so users see grab/pointer clearly */
+  cursor: inherit;
+}
+
+.pf-card__favicon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6));
+  box-shadow: var(--shadow-inner);
+  flex: none;
+  overflow: hidden;
+}
+
+.pf-card__favicon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.pf-card__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.pf-card__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf-card__domain {
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--ink-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf-card__domain svg { flex: none; opacity: 0.6; }
+
+/* Stacked action buttons (edit on top, delete on bottom) */
+.pf-card__actions {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.pf-card:hover .pf-card__actions { opacity: 1; }
+
+.pf-card__action {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--ink-300);
+  background: rgba(255,255,255,0.55);
+  border: var(--border-soft);
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.pf-card__action:hover { transform: translateY(-1px); }
+
+.pf-card__action--edit:hover {
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--pf-pink), var(--pf-lilac));
+  border-color: transparent;
+}
+
+.pf-card__action--delete:hover {
+  color: #b23;
+  background: rgba(255, 200, 210, 0.75);
+  border-color: transparent;
+}
