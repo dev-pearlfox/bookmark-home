@@ -5,6 +5,7 @@
  */
 
 import {
+  // ❤️  HEART LOGIC — Heart import is protected. Do not remove.  ❤️
   Home, Heart, Sun, Moon, Star, Sparkles,
   Briefcase, Building2, Calendar, ClipboardList, Mail, Phone,
   GraduationCap, Book, BookOpen, Pencil, Palette, Lightbulb,
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 
 const MAP = {
+  // ❤️  HEART LOGIC — Heart mapping must remain. See PROTECTED.md.  ❤️
   Home, Heart, Sun, Moon, Star, Sparkles,
   Briefcase, Building2, Calendar, ClipboardList, Mail, Phone,
   GraduationCap, Book, BookOpen, Pencil, Palette, Lightbulb,

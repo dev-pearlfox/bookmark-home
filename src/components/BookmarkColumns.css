@@ -1,5 +1,6 @@
 .pf-cols-wrap {
   flex: 1;
+  min-height: 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -9,13 +10,14 @@
 /* Vertical stack of horizontal category bands (Netflix-shelves style) */
 .pf-cols {
   flex: 1;
+  min-height: 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: 120px;
+  padding-bottom: 12px;
 }
 
 .pf-cols__slot {
@@ -73,7 +75,7 @@
   box-shadow: var(--shadow-lift);
 }
 
-/* Left-side drag handle */
+/* Left-side drag handle (vertical/shelves layout) */
 .pf-col__grip {
   position: absolute;
   left: 8px;
@@ -86,31 +88,71 @@
   padding: 0;
   border-radius: 8px;
   color: var(--ink-500);
-  background: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.6);
   border: var(--border-soft);
-  opacity: 0;
+  opacity: 0.9;
   cursor: grab;
-  transition: opacity var(--dur-fast) var(--ease-out),
-              color var(--dur-fast) var(--ease-out),
+  transition: color var(--dur-fast) var(--ease-out),
               background var(--dur-fast) var(--ease-out),
               transform var(--dur-fast) var(--ease-out);
   touch-action: none;
   z-index: 2;
 }
-.pf-col:hover .pf-col__grip { opacity: 1; }
 .pf-col__grip:hover {
   color: var(--ink-900);
   background: var(--surface-hover);
+  opacity: 1;
   transform: translate(-1px, -50%);
 }
 .pf-col__grip:active { cursor: grabbing; }
 
-/* Header row (icon + name + count + edit hint) */
+/* Resize handle at bottom-center (horizontal/columns layout only).
+   Visually distinct from the top drag-grip: it's a small circle with
+   ChevronsUpDown icon so it clearly reads as "stretch me vertically". */
+.pf-col__resize {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--ink-500);
+  background: rgba(255,255,255,0.7);
+  border: var(--border-soft);
+  opacity: 0.9;
+  cursor: ns-resize;
+  transition: color var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out),
+              opacity var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
+  touch-action: none;
+  z-index: 2;
+  box-shadow: var(--shadow-soft), var(--shadow-inner);
+}
+.pf-col__resize:hover {
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--pf-mint), var(--pf-sky));
+  opacity: 1;
+  transform: translate(-50%, 1px) scale(1.08);
+  box-shadow: var(--shadow-lift), var(--shadow-inner);
+}
+.pf-col__resize:active {
+  cursor: ns-resize;
+  transform: translate(-50%, 0) scale(0.98);
+}
+
+/* Header row (icon + name + count + edit hint). Kept tight vertically —
+   the body / bookmark cards are the star of the show, not the chrome. */
 .pf-col__head {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0 2px 4px;
+  padding: 0 2px 2px;
 }
 
 .pf-col__title {
@@ -119,7 +161,7 @@
   gap: 6px;
   min-width: 0;
   flex: 1;
-  padding: 2px 6px 2px 3px;
+  padding: 1px 6px 1px 3px;
   border-radius: 8px;
   color: inherit;
   background: transparent;
@@ -141,9 +183,9 @@
 }
 
 .pf-col__icon {
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
   display: grid;
   place-items: center;
   background: var(--pf-lilac);
@@ -169,15 +211,48 @@
   text-overflow: ellipsis;
 }
 
-.pf-col__count {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--ink-500);
-  background: rgba(255,255,255,0.7);
-  padding: 1px 7px;
+/* "Open all" pill — replaces the old count badge. Still surfaces the
+   count as a trailing chip so no information is lost. */
+.pf-col__open-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px 3px 8px;
   border-radius: 999px;
-  min-width: 20px;
-  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink-700);
+  background: rgba(255, 255, 255, 0.7);
+  border: var(--border-soft);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
+}
+.pf-col__open-all:hover {
+  background: var(--surface-hover);
+  color: var(--ink-900);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+.pf-col__open-all:active { transform: translateY(0); }
+
+.pf-col__open-all-label { line-height: 1; }
+
+.pf-col__open-all-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--pf-mint), var(--pf-sky));
+  box-shadow: var(--shadow-inner);
 }
 
 /* Body — horizontal shelf of bookmarks + add slot */
@@ -196,11 +271,11 @@
 .pf-col__body .pf-card {
   flex: none;
   width: 232px;
-  padding: 8px 10px;
-  border-radius: 14px;
+  padding: 6px 10px;
+  border-radius: 12px;
   scroll-snap-align: start;
 }
-.pf-col__body .pf-card__favicon { width: 32px; height: 32px; border-radius: 9px; }
+.pf-col__body .pf-card__favicon { width: 30px; height: 30px; border-radius: 9px; }
 .pf-col__body .pf-card__favicon img { width: 20px; height: 20px; }
 
 /* Inline "next-slot" plus tile — sits at the END of the horizontal shelf */
@@ -336,27 +411,6 @@
   flex: none;
 }
 
-/* Global "no matches" banner shown above the bands */
-.pf-cols-empty {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: var(--r-md);
-  font-size: 13px;
-  color: var(--ink-500);
-}
-
-.pf-cols-empty__icon {
-  width: 34px; height: 34px;
-  border-radius: 10px;
-  display: grid; place-items: center;
-  background: linear-gradient(135deg, var(--pf-pink), var(--pf-lilac));
-  color: var(--ink-900);
-}
-
-.pf-cols-empty p { margin: 0; }
-
 @media (max-width: 700px) {
   .pf-col__body .pf-card { width: 210px; }
   .pf-col__slot { width: 180px; }
@@ -367,23 +421,188 @@
    Overrides for the vertical (default) rules above.
    ============================================================ */
 .pf-cols[data-layout="horizontal"] {
+  /* Single source of truth for column heights in column view.
+     Per-category overrides (drag-resize handle) still win via inline style. */
+  --pf-col-default-h: 360px;
+  --pf-col-featured-h: 600px;   /* first two columns get a taller default */
+  --pf-col-secondary-h: 200px;  /* stacked container beneath each column */
+  display: flex;
   flex-direction: row;
-  display: grid;
-  grid-auto-flow: column;
+  align-items: flex-start;   /* columns are fixed height; sit at the top */
+  gap: 14px;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto;          /* vertical scroll when a column is stretched taller */
   scroll-snap-type: x mandatory;
+  padding-bottom: 0;
 }
 
 .pf-cols[data-layout="horizontal"] .pf-cols__slot {
-  scroll-snap-align: start;
+  flex: 1 1 224px;
+  min-width: 224px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;   /* stack: containers grid, then + Add below */
+  gap: 10px;
 }
 
+/* Stack of containers inside a slot (primary + secondary + extras).
+   Kept as a CSS grid — even though sub-cols is always 1 today — so we
+   can bring back multi-column growth later without another rewrite. */
+.pf-cols__slot-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--sub-cols, 1), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--sub-rows, 2), auto);
+  grid-auto-flow: column;
+  gap: 12px;
+  min-width: 0;
+}
+/* Fallback: in shelves (vertical) mode --sub-cols/--sub-rows aren't
+   set, so degrade the inner grid to a plain block. */
+.pf-cols[data-layout="vertical"] .pf-cols__slot-grid {
+  display: block;
+}
+
+/* Add-container buttons — pill for row, small square for column. */
+.pf-cols__slot-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink-500);
+  background: rgba(255, 255, 255, 0.4);
+  border: 1.5px dashed rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+.pf-cols__slot-add:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: rgba(0, 0, 0, 0.24);
+  color: var(--ink-900);
+  transform: translateY(-1px);
+}
+.pf-cols__slot-add:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.pf-cols__slot-add--row {
+  width: 100%;
+}
+
+.pf-cols[data-layout="horizontal"] .pf-cols__slot { scroll-snap-align: start; }
+
 .pf-col[data-layout="horizontal"] {
-  padding: 22px 12px 12px;
-  gap: 10px;
-  min-height: 560px;
-  max-height: calc(100vh - 100px);
+  padding: 18px 12px 12px;   /* top: room for the small drag grip */
+  gap: 6px;
+  height: var(--pf-col-default-h);
+  min-height: var(--pf-col-default-h);
+  max-height: none;
+  width: 100%;   /* fill the slot which handles all width sizing */
+  /* Smooth height changes for reset / programmatic updates. During an
+     active drag we set data-resizing="true" to switch this off so each
+     mousemove paints instantly (see rule below). */
+  transition: height var(--dur) var(--ease-out);
+}
+.pf-col[data-layout="horizontal"][data-resizing="true"] { transition: none; }
+
+/* Featured columns: the first two positional slots get a taller default
+   so the primary categories breathe. Per-category drag-resize (inline
+   style) overrides this.
+   Descendant selector — the `.pf-col-secondary` extras use a different
+   base class so they're naturally excluded. Uses descendant (not `>`)
+   because the primary column lives inside `.pf-cols__slot-grid` now. */
+.pf-cols[data-layout="horizontal"] .pf-cols__slot:nth-child(1) .pf-col[data-layout="horizontal"],
+.pf-cols[data-layout="horizontal"] .pf-cols__slot:nth-child(2) .pf-col[data-layout="horizontal"] {
+  height: var(--pf-col-featured-h);
+  min-height: var(--pf-col-featured-h);
+}
+
+/* Secondary container: an empty drop-zone stacked below each column in
+   horizontal view. Standalone class (not a .pf-col variant) so we don't
+   inherit the primary column's stripe, shadow, and glass fill. Also
+   drag-resizable via .pf-col__resize (reusing the primary column's grip
+   styles further down for consistency). */
+.pf-col-secondary {
+  position: relative;
+  width: 100%;
+  height: var(--pf-col-secondary-h);
+  min-height: var(--pf-col-secondary-h);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 8px 14px 20px;     /* bottom padding leaves room for the resize handle */
+  border-radius: var(--r-lg);
+  border: 1.5px dashed rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--ink-500);
+  transition: height var(--dur) var(--ease-out),
+              background var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out);
+}
+.pf-col-secondary[data-resizing="true"] { transition: none; }
+
+/* Clickable header CTA — icon in colored bubble + label. Mirrors the
+   primary column header's visual grammar so the two feel like siblings. */
+.pf-col-secondary__cta {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 6px 2px 2px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--ink-900);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+.pf-col-secondary__cta:hover {
+  background: var(--surface-hover);
+  transform: translateY(-1px);
+}
+.pf-col-secondary__cta:active { transform: translateY(0); }
+
+/* Icon bubble: piggybacks on .pf-col__icon (which the primary column
+   uses) for the category-tinted background via .pf-col--{color}. Only
+   size + shadow are overridden here so it visually matches the primary
+   header (which is 20px tall) instead of being a chunky outlier. */
+.pf-col-secondary__icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  box-shadow: var(--shadow-inner);
+}
+.pf-col-secondary__title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  color: var(--ink-900);
+}
+/* Small "+" affordance at the trailing edge, hints at the click-to-add
+   behaviour. Grows a touch on hover to feel interactive. */
+.pf-col-secondary__add {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+  border-radius: 999px;
+  color: var(--ink-500);
+  background: rgba(0, 0, 0, 0.04);
+  transition: background var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+.pf-col-secondary__cta:hover .pf-col-secondary__add {
+  color: var(--ink-900);
+  background: rgba(0, 0, 0, 0.08);
+  transform: rotate(90deg);
 }
 
 /* Move the color stripe from left edge → top edge in horizontal mode */
@@ -397,23 +616,31 @@
   border-radius: 0 0 6px 6px;
 }
 
-/* Grip: was left-center → move to top-center */
+/* Grip: was left-center → move to top-center (always visible) */
 .pf-col[data-layout="horizontal"] .pf-col__grip {
   left: 50%;
   top: 3px;
   transform: translateX(-50%);
-  width: 34px;
+  width: 40px;
   height: 14px;
+  opacity: 0.9;
 }
 .pf-col[data-layout="horizontal"] .pf-col__grip:hover {
   transform: translate(-50%, -1px);
+  opacity: 1;
+}
+
+/* Nudge inner padding so the round resize button at the bottom doesn't
+   hide the last card / + slot */
+.pf-col[data-layout="horizontal"] {
+  padding-bottom: 34px;
 }
 
 /* Body: horizontal shelf → single vertical stack inside each kanban column */
 .pf-col[data-layout="horizontal"] .pf-col__body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   overflow-x: hidden;
   overflow-y: auto;
   scroll-snap-type: none;
@@ -435,10 +662,12 @@
   grid-auto-columns: minmax(224px, 1fr);
 }
 
-/* Add-category placeholder: horizontal band → tall column */
+/* Add-category placeholder: horizontal band → tall column.
+   Matches the default column height so the row visually aligns. */
 .pf-col--add[data-layout="horizontal"] {
   padding: 12px;
-  min-height: 560px;
+  height: var(--pf-col-default-h);
+  min-height: var(--pf-col-default-h);
 }
 .pf-col--add[data-layout="horizontal"] .pf-col__add-cta {
   flex-direction: column;

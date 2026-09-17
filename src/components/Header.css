@@ -54,58 +54,88 @@
   justify-content: flex-end;
 }
 
-.pf-layout-toggle {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  color: var(--ink-700);
-  background: var(--surface-frost);
-  border: var(--border-soft);
-  transition: background var(--dur-fast) var(--ease-out),
-              color var(--dur-fast) var(--ease-out),
-              transform var(--dur-fast) var(--ease-out);
-}
-.pf-layout-toggle:hover {
-  background: var(--surface-hover);
-  color: var(--ink-900);
-  transform: translateY(-1px);
-}
+/* -----------------------------------------------------------------
+   View switch — segmented toggle with a sliding thumb.
 
-.pf-header__search {
-  flex: 1;
-  max-width: 460px;
-  display: flex;
+     [ Shelf View ]  (◉━━━)  [ Column View ]
+
+   Active side is emphasized via the parent's data-layout attribute
+   (data-layout="vertical" → left active, "horizontal" → right active).
+   ----------------------------------------------------------------- */
+.pf-view-switch {
+  --_thumb-size: 16px;
+  --_track-w: 36px;
+  --_track-h: 20px;
+  --_track-pad: 2px;
+
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 999px;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
-  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  color: var(--ink-500);
   background: var(--surface-frost);
   border: var(--border-soft);
-  transition: box-shadow var(--dur) var(--ease-out), background var(--dur) var(--ease-out);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
 }
+.pf-view-switch:hover { background: var(--surface-hover); transform: translateY(-1px); }
+.pf-view-switch:active { transform: translateY(0); }
 
-.pf-header__search:focus-within {
-  background: var(--surface-hover);
-  box-shadow: 0 0 0 4px rgba(180, 160, 240, 0.25);
+.pf-view-switch__side {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+  transition: color var(--dur-fast) var(--ease-out),
+              font-weight var(--dur-fast) var(--ease-out);
 }
-
-.pf-header__search svg { color: var(--ink-500); flex: none; }
-
-.pf-header__search input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 14px;
+/* Active side (state-driven off parent's data-layout) */
+.pf-view-switch[data-layout="vertical"]  .pf-view-switch__side--left,
+.pf-view-switch[data-layout="horizontal"] .pf-view-switch__side--right {
   color: var(--ink-900);
+  font-weight: 700;
 }
 
-.pf-header__search input::placeholder { color: var(--ink-300); }
+/* The track + thumb */
+.pf-view-switch__track {
+  position: relative;
+  width: var(--_track-w);
+  height: var(--_track-h);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--pf-mint), var(--pf-sky));
+  box-shadow: var(--shadow-inner);
+  flex: none;
+}
+.pf-view-switch__thumb {
+  position: absolute;
+  top: var(--_track-pad);
+  left: var(--_track-pad);
+  width: var(--_thumb-size);
+  height: var(--_thumb-size);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  transition: transform var(--dur) var(--ease-out);
+}
+.pf-view-switch[data-layout="horizontal"] .pf-view-switch__thumb {
+  transform: translateX(calc(var(--_track-w) - var(--_thumb-size) - var(--_track-pad) * 2));
+}
+
+/* Narrow viewports: drop the label text, keep icons + switch. Still
+   readable, still tappable. */
+@media (max-width: 520px) {
+  .pf-view-switch { gap: 8px; padding: 0 10px; }
+  .pf-view-switch__side { font-size: 0; }         /* hide text */
+  .pf-view-switch__side > svg { font-size: 14px; }/* icon stays */
+}
 
 @media (max-width: 720px) {
   .pf-header { flex-direction: column; align-items: stretch; gap: 12px; margin: 12px; }
-  .pf-header__search { max-width: none; }
   .pf-header__actions { flex-direction: column; align-items: stretch; }
 }

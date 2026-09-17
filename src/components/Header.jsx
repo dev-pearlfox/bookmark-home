@@ -1,10 +1,42 @@
-import { Search, Sparkles, Rows3, Columns3 } from 'lucide-react';
+import { Sparkles, Rows3, Columns3 } from 'lucide-react';
 import BackupControl from './BackupControl.jsx';
 import './Header.css';
 
+/**
+ * Segmented switch for the two view modes. Left = shelves, right = columns.
+ * The whole thing is one <button>: clicking anywhere toggles. A sliding
+ * thumb inside the middle track indicates the active side, and the active
+ * label gets emphasized styling via the parent's data-layout attribute.
+ */
+function ViewSwitch({ layout, onToggleLayout }) {
+  const isColumns = layout === 'horizontal';
+  return (
+    <button
+      type="button"
+      className="pf-view-switch"
+      onClick={onToggleLayout}
+      role="switch"
+      aria-checked={isColumns}
+      aria-label={isColumns ? 'Switch to shelves view' : 'Switch to columns view'}
+      title={isColumns ? 'Switch to shelves view' : 'Switch to columns view'}
+      data-layout={layout}
+    >
+      <span className="pf-view-switch__side pf-view-switch__side--left">
+        <Rows3 size={14} strokeWidth={2.2} aria-hidden="true" />
+        Shelf View
+      </span>
+      <span className="pf-view-switch__track" aria-hidden="true">
+        <span className="pf-view-switch__thumb" />
+      </span>
+      <span className="pf-view-switch__side pf-view-switch__side--right">
+        <Columns3 size={14} strokeWidth={2.2} aria-hidden="true" />
+        Column View
+      </span>
+    </button>
+  );
+}
+
 export default function Header({
-  query,
-  onQueryChange,
   bookmarkCount,
   getStateSnapshot,
   onRestore,
@@ -24,24 +56,7 @@ export default function Header({
       </div>
 
       <div className="pf-header__actions">
-        <label className="pf-header__search">
-          <Search size={18} strokeWidth={2} aria-hidden="true" />
-          <input
-            type="search"
-            placeholder="Search your bookmarks…"
-            value={query}
-            onChange={(e) => onQueryChange(e.target.value)}
-            aria-label="Search bookmarks"
-          />
-        </label>
-        <button
-          className="pf-layout-toggle"
-          onClick={onToggleLayout}
-          aria-label={layout === 'vertical' ? 'Switch to horizontal (columns) layout' : 'Switch to vertical (shelves) layout'}
-          title={layout === 'vertical' ? 'Switch to columns' : 'Switch to shelves'}
-        >
-          {layout === 'vertical' ? <Columns3 size={16} /> : <Rows3 size={16} />}
-        </button>
+        <ViewSwitch layout={layout} onToggleLayout={onToggleLayout} />
         <BackupControl
           getStateSnapshot={getStateSnapshot}
           onRestore={onRestore}

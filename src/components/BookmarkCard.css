@@ -99,7 +99,7 @@
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   opacity: 0;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
@@ -107,12 +107,12 @@
 .pf-card:hover .pf-card__actions { opacity: 1; }
 
 .pf-card__action {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 7px;
   color: var(--ink-300);
   background: rgba(255,255,255,0.55);
   border: var(--border-soft);

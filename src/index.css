@@ -81,19 +81,44 @@ body::before {
     radial-gradient(900px  700px at 20% 90%, var(--pf-mint)  0%, transparent 60%),
     radial-gradient(1000px 700px at 85% 85%, var(--pf-lilac) 0%, transparent 60%);
   filter: saturate(1.05);
-  animation: aurora 22s var(--ease-out) infinite alternate;
+  animation: aurora-a 24s ease-in-out infinite;
+  will-change: transform;
+  /* Slightly oversize so the transform never reveals hard edges */
+  transform-origin: 50% 50%;
 }
 
 body::after {
   background:
-    radial-gradient(700px 500px at 50% 50%, var(--pf-peach) 0%, transparent 65%);
-  opacity: 0.6;
-  animation: aurora 30s var(--ease-out) infinite alternate-reverse;
+    radial-gradient(700px 500px at 50% 50%, var(--pf-peach) 0%, transparent 65%),
+    radial-gradient(600px 500px at 30% 70%, var(--pf-rose)  0%, transparent 65%);
+  opacity: 0.55;
+  animation: aurora-b 32s ease-in-out infinite;
+  will-change: transform;
+  transform-origin: 50% 50%;
 }
 
-@keyframes aurora {
-  0%   { transform: translate3d(0, 0, 0) scale(1); }
-  100% { transform: translate3d(-2%, 1%, 0) scale(1.05); }
+/* Two non-synchronised animation tracks give the aurora that "breathing +
+   drifting" feel without ever touching layout. Only `transform` moves, so
+   every frame is a GPU composite — no repaint, no reflow, no jank. */
+@keyframes aurora-a {
+  0%   { transform: translate3d(0,     0,    0) scale(1)    rotate(0deg); }
+  25%  { transform: translate3d(-6%,   3%,   0) scale(1.08) rotate(0.6deg); }
+  50%  { transform: translate3d(4%,   -4%,   0) scale(1.12) rotate(-0.5deg); }
+  75%  { transform: translate3d(-3%,   5%,   0) scale(1.06) rotate(0.4deg); }
+  100% { transform: translate3d(0,     0,    0) scale(1)    rotate(0deg); }
+}
+
+@keyframes aurora-b {
+  0%   { transform: translate3d(0,     0,    0) scale(1.05) rotate(0deg); }
+  33%  { transform: translate3d(5%,    4%,   0) scale(1.15) rotate(-0.7deg); }
+  66%  { transform: translate3d(-4%,  -5%,   0) scale(1.08) rotate(0.6deg); }
+  100% { transform: translate3d(0,     0,    0) scale(1.05) rotate(0deg); }
+}
+
+/* Respect users who prefer no motion — keeps the multi-colour look, kills
+   the animation. */
+@media (prefers-reduced-motion: reduce) {
+  body::before, body::after { animation: none; }
 }
 
 button {

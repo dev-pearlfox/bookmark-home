@@ -1,21 +1,28 @@
+html, body, #root {
+  height: 100%;
+}
+
 .pf-app {
   min-height: 100vh;
+  height: 100vh;             /* pin to viewport so children can flex-share it */
   display: flex;
   flex-direction: column;
 }
 
 .pf-main {
   flex: 1;
-  min-height: 0;
-  display: block;
+  min-height: 0;             /* let children shrink inside flex */
+  display: flex;             /* was block — now propagates height cleanly */
+  flex-direction: column;
   padding: 10px 24px 24px;
 }
 
 .pf-cols-scroll {
+  flex: 1;
+  min-height: 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
 @media (max-width: 900px) {

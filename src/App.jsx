@@ -8,6 +8,7 @@ import BookmarkCard from './components/BookmarkCard.jsx';
 import CategoryDragPreview from './components/CategoryDragPreview.jsx';
 import AddBookmarkModal from './components/AddBookmarkModal.jsx';
 import AddCategoryModal from './components/AddCategoryModal.jsx';
+import { useHeightsMap } from './components/useHeightsMap.js';
 
 import { DEFAULT_CATEGORIES, SAMPLE_BOOKMARKS } from './defaultData.js';
 import { loadState, saveState } from './storage.js';
@@ -18,7 +19,15 @@ import './App.css';
 const uid = (prefix = 'id') =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
-const LAYOUT_KEY = 'pf.bookmarkHome.layout.v1';
+const COL_HEIGHTS_KEY = 'pf.bookmarkHome.colHeights.v2';
+const SECONDARY_HEIGHTS_KEY = 'pf.bookmarkHome.secondaryHeights.v1';
+const CONTAINER_GRID_KEY = 'pf.bookmarkHome.containerGrid.v1';
+
+/* Cap on the per-slot container stack. Primary + secondary are the two
+   base rows; users can add extras below via the "+ Add below" button up
+   to this total. Horizontal growth (side-by-side sub-columns) is
+   intentionally disabled — the app grows only downward. */
+const MAX_ROWS_PER_SUBCOL = 20;
 
 function seedState() {
   return {
@@ -38,7 +47,6 @@ export default function App() {
     }
     return loaded || seedState();
   });
-  const [query, setQuery] = useState('');
   const [isAddBookmarkOpen, setAddBookmarkOpen] = useState(false);
   const [pendingCategoryId, setPendingCategoryId] = useState(null); // pre-select cat for add-modal
   const [editingBookmark, setEditingBookmark] = useState(null);
@@ -48,17 +56,31 @@ export default function App() {
   const [categoryPopoverAnchor, setCategoryPopoverAnchor] = useState(null);
   const [activeDragBookmark, setActiveDragBookmark] = useState(null);
   const [activeDragCategory, setActiveDragCategory] = useState(null);
-  const [layout, setLayout] = useState(() => {
-    const v = localStorage.getItem(LAYOUT_KEY);
-    return v === 'horizontal' || v === 'vertical' ? v : 'vertical';
-  });
+  // Layout always starts in Column View on load — no persistence. Users
+  // can toggle to Shelves during a session, but a reload resets them.
+  const [layout, setLayout] = useState('horizontal');
+  // Per-category custom heights (horizontal/column view only). Missing
+  // entries → container uses the CSS default. Two parallel maps: one for
+  // the primary column, one for the secondary container beneath it.
+  const [categoryHeights, setCategoryHeight] = useHeightsMap(COL_HEIGHTS_KEY);
+  const [secondaryHeights, setSecondaryHeight] = useHeightsMap(SECONDARY_HEIGHTS_KEY);
+
+  /* Per-category mini-grid of extra containers beyond primary+secondary.
+     Missing entry ⇒ {cols: 0, rows: 0} ⇒ the default 1×2 layout. */
+  const [containerGrid, setContainerGridEntry] = useHeightsMap(CONTAINER_GRID_KEY);
+
+  const growContainerGrid = useCallback((categoryId) => {
+    if (!categoryId) return;
+    const cur = containerGrid[categoryId] || { cols: 0, rows: 0 };
+    if (cur.rows >= MAX_ROWS_PER_SUBCOL - 2) return;
+    setContainerGridEntry(categoryId, { ...cur, rows: cur.rows + 1 });
+  }, [containerGrid, setContainerGridEntry]);
 
   const columnsRef = useRef(null);
 
   // Persist state — localStorage is the fast primary cache, backup file is
   // the durable secondary (survives cache clears / reinstalls).
   useEffect(() => { saveState(state); }, [state]);
-  useEffect(() => { localStorage.setItem(LAYOUT_KEY, layout); }, [layout]);
 
   // Debounced backup writer — coalesces rapid state changes into one write.
   const backupTimer = useRef(null);
@@ -98,23 +120,16 @@ export default function App() {
   const { categories, bookmarks, activeCategoryId } = state;
 
   const bookmarksByCategory = useMemo(() => {
-    const q = query.trim().toLowerCase();
     const map = {};
     for (const cat of categories) map[cat.id] = [];
     for (const bm of bookmarks) {
-      if (q && !(bm.title.toLowerCase().includes(q) || bm.url.toLowerCase().includes(q))) continue;
       if (map[bm.categoryId]) map[bm.categoryId].push(bm);
     }
     // Display order = natural order in state.bookmarks. This lets
     // drag-reorders within a column stick without needing a separate
     // per-category order field.
     return map;
-  }, [bookmarks, categories, query]);
-
-  const totalMatches = useMemo(
-    () => Object.values(bookmarksByCategory).reduce((n, arr) => n + arr.length, 0),
-    [bookmarksByCategory]
-  );
+  }, [bookmarks, categories]);
 
   // --- Bookmark mutations ---
   const addBookmark = (payload) => {
@@ -286,8 +301,6 @@ export default function App() {
     >
       <div className="pf-app">
         <Header
-          query={query}
-          onQueryChange={setQuery}
           bookmarkCount={bookmarks.length}
           getStateSnapshot={getStateSnapshot}
           onRestore={handleRestore}
@@ -299,6 +312,13 @@ export default function App() {
           <div className="pf-cols-scroll" ref={columnsRef}>
             <BookmarkColumns
               layout={layout}
+              categoryHeights={categoryHeights}
+              onResizeCategoryHeight={setCategoryHeight}
+              secondaryHeights={secondaryHeights}
+              onResizeSecondaryHeight={setSecondaryHeight}
+              containerGrid={containerGrid}
+              onGrowContainerGrid={growContainerGrid}
+              maxRowsPerSubcol={MAX_ROWS_PER_SUBCOL}
               categories={categories}
               bookmarksByCategory={bookmarksByCategory}
               onAddToCategory={openAddBookmarkFor}
@@ -316,8 +336,6 @@ export default function App() {
                 setCategoryPopoverAnchor(rect || null);
                 setAddCategoryOpen(true);
               }}
-              query={query}
-              totalMatches={totalMatches}
             />
           </div>
         </main>
