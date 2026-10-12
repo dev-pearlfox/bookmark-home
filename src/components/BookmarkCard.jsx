@@ -1,9 +1,70 @@
+import { memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Pencil } from 'lucide-react';
 import { getDomain, bookmarkLabel } from '../metadata.js';
 import Favicon from './Favicon.jsx';
 import './BookmarkCard.css';
+
+/**
+ * The inside of a card (link, favicon, edit and reorder buttons). Memoised:
+ * while a drag is in progress dnd-kit re-renders every card shell on each
+ * pointer move, but the content only changes when the bookmark does.
+ */
+const CardContent = memo(function CardContent({ bookmark, onEdit, setActivatorNodeRef, attributes, dragOverlay }) {
+  const domain = getDomain(bookmark.url);
+  const label = bookmarkLabel(bookmark);
+  return (
+    <>
+    <a
+      className="pf-card__body"
+      href={bookmark.url}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <div className="pf-card__favicon">
+        <Favicon key={`${bookmark.url}|${bookmark.favicon}`} bookmark={bookmark} label={label} />
+      </div>
+      <div className="pf-card__meta">
+        <div className="pf-card__title" title={label}>{label}</div>
+        <div className="pf-card__domain">
+          <span>{domain}</span>
+        </div>
+      </div>
+    </a>
+
+    {!dragOverlay && (
+      <div className="pf-card__actions">
+        <button
+          type="button"
+          ref={setActivatorNodeRef}
+          className="pf-card__action pf-card__action--handle"
+          aria-label={`Reorder ${bookmark.title}`}
+          title="Drag to reorder • or press Space, then use the arrow keys"
+          {...attributes}
+        >
+          <GripVertical size={13} />
+        </button>
+        {onEdit && (
+          <button
+            type="button"
+            className="pf-card__action pf-card__action--edit"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(bookmark, e.currentTarget.getBoundingClientRect());
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            aria-label={`Edit ${bookmark.title}`}
+            title="Edit bookmark"
+          >
+            <Pencil size={13} />
+          </button>
+        )}
+      </div>
+    )}
+    </>
+  );
+});
 
 /**
  * A single bookmark tile.
@@ -52,8 +113,6 @@ export default function BookmarkCard({ bookmark, onEdit, dragOverlay = false }) 
         willChange: 'transform',
       };
 
-  const domain = getDomain(bookmark.url);
-  const label = bookmarkLabel(bookmark);
   // Pointer listeners go on the card; ARIA attributes go on the handle only.
   const dragListeners = dragOverlay ? {} : listeners;
 
@@ -64,52 +123,13 @@ export default function BookmarkCard({ bookmark, onEdit, dragOverlay = false }) 
       className={`pf-card ${dragOverlay ? 'pf-card--overlay' : ''}`}
       {...dragListeners}
     >
-      <a
-        className="pf-card__body"
-        href={bookmark.url}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <div className="pf-card__favicon">
-          <Favicon key={`${bookmark.url}|${bookmark.favicon}`} bookmark={bookmark} label={label} />
-        </div>
-        <div className="pf-card__meta">
-          <div className="pf-card__title" title={label}>{label}</div>
-          <div className="pf-card__domain">
-            <span>{domain}</span>
-          </div>
-        </div>
-      </a>
-
-      {!dragOverlay && (
-        <div className="pf-card__actions">
-          <button
-            type="button"
-            ref={setActivatorNodeRef}
-            className="pf-card__action pf-card__action--handle"
-            aria-label={`Reorder ${bookmark.title}`}
-            title="Drag to reorder • or press Space, then use the arrow keys"
-            {...attributes}
-          >
-            <GripVertical size={13} />
-          </button>
-          {onEdit && (
-            <button
-              type="button"
-              className="pf-card__action pf-card__action--edit"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(bookmark, e.currentTarget.getBoundingClientRect());
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              aria-label={`Edit ${bookmark.title}`}
-              title="Edit bookmark"
-            >
-              <Pencil size={13} />
-            </button>
-          )}
-        </div>
-      )}
+      <CardContent
+        bookmark={bookmark}
+        onEdit={onEdit}
+        setActivatorNodeRef={setActivatorNodeRef}
+        attributes={attributes}
+        dragOverlay={dragOverlay}
+      />
     </article>
   );
 }

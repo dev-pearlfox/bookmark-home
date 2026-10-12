@@ -14,6 +14,7 @@ import { useHeightsMap } from './components/useHeightsMap.js';
 
 import { DEFAULT_CATEGORIES, SAMPLE_BOOKMARKS } from './defaultData.js';
 import { loadState, saveState, loadZoom, saveZoom } from './storage.js';
+import { useStableCallback } from './useStableCallback.js';
 import { writeBackup } from './backup.js';
 import { buildSnapshot, serializeSnapshot, splitSnapshot } from './snapshot.js';
 import { dropBookmark, reorderCategories } from './reorder.js';
@@ -266,11 +267,12 @@ export default function App() {
     setAddBookmarkOpen(true);
   };
 
-  const openEditBookmark = (bookmark, rect) => {
+  // Stable identity so the memoised card contents are not re-rendered by it.
+  const openEditBookmark = useStableCallback((bookmark, rect) => {
     setEditingBookmark(bookmark);
     setBookmarkPopoverAnchor(rect || null);
     setAddBookmarkOpen(true);
-  };
+  });
 
   // --- DnD wiring ---
   const sensors = useSensors(
