@@ -92,8 +92,6 @@
   text-overflow: ellipsis;
 }
 
-.pf-card__domain svg { flex: none; opacity: 0.6; }
-
 /* Stacked action buttons (edit on top, delete on bottom) */
 .pf-card__actions {
   align-self: stretch;

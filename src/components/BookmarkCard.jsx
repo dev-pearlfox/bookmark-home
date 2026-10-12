@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ExternalLink, GripVertical, Pencil } from 'lucide-react';
+import { GripVertical, Pencil } from 'lucide-react';
 import { getDomain, getFaviconUrl, bookmarkLabel } from '../metadata.js';
 import './BookmarkCard.css';
 
@@ -84,7 +84,6 @@ export default function BookmarkCard({ bookmark, onEdit, dragOverlay = false }) 
           <div className="pf-card__title" title={label}>{label}</div>
           <div className="pf-card__domain">
             <span>{domain}</span>
-            <ExternalLink size={12} strokeWidth={2} />
           </div>
         </div>
       </a>
