@@ -156,12 +156,13 @@
 }
 
 .pf-col__title {
+  position: relative; /* anchors the hover-only edit hint (it takes no layout space) */
   display: flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
   flex: 1;
-  padding: 1px 6px 1px 3px;
+  padding: 1px 3px;
   border-radius: 8px;
   color: inherit;
   background: transparent;
@@ -171,14 +172,24 @@
 }
 
 .pf-col__title:hover { background: rgba(255,255,255,0.6); }
-.pf-col__title:hover .pf-col__edit-hint { opacity: 1; transform: translateY(0); }
+.pf-col__title:hover .pf-col__edit-hint { opacity: 1; transform: translateY(-50%); }
 
+/* The pencil appears on hover only, so it is overlaid on the right end of the
+   button instead of sitting in the flex row: an invisible-but-present icon
+   used to reserve ~17px and cut the category name short. */
 .pf-col__edit-hint {
+  position: absolute;
+  right: 2px;
+  top: 50%;
   display: inline-grid;
   place-items: center;
-  color: var(--ink-300);
+  padding: 3px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ink-500);
   opacity: 0;
-  transform: translateY(-2px);
+  pointer-events: none;
+  transform: translateY(calc(-50% - 2px));
   transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 
@@ -208,7 +219,9 @@
   letter-spacing: -0.01em;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  /* Show as much of the name as fits, then cut it (no "..."), matching the
+     bookmark titles. The full name is in the button's tooltip. */
+  text-overflow: clip;
 }
 
 /* "Open all" pill — replaces the old count badge. Still surfaces the

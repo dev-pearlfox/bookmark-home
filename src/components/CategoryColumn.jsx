@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useSortable, SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Pencil, GripVertical, GripHorizontal, ChevronsUpDown, ExternalLink, X } from 'lucide-react';
+import { Plus, Pencil, GripVertical, GripHorizontal, ChevronsUpDown, X } from 'lucide-react';
 import BookmarkCard from './BookmarkCard.jsx';
 import { getIcon } from './iconMap.js';
 import { useDragResize } from './useDragResize.js';
@@ -130,7 +130,7 @@ export default function CategoryColumn({
           className="pf-col__title"
           onClick={(e) => onEditCategory?.(category.id, e.currentTarget.getBoundingClientRect())}
           aria-label={`Edit ${category.name}`}
-          title="Click to rename or change icon"
+          title={`${category.name} • click to rename or change icon`}
         >
           <span className="pf-col__icon"><Icon size={13} strokeWidth={2.2} /></span>
           <span className="pf-col__name">{category.name}</span>
@@ -145,7 +145,6 @@ export default function CategoryColumn({
             aria-label={`Open all ${bookmarks.length} bookmarks in ${category.name}`}
             title="Open every bookmark in a new tab"
           >
-            <ExternalLink size={11} strokeWidth={2.4} aria-hidden="true" />
             <span className="pf-col__open-all-label">Open all</span>
             <span className="pf-col__open-all-count">{bookmarks.length}</span>
           </button>
