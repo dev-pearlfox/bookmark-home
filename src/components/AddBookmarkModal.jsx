@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import Modal from './Modal.jsx';
 import { getIcon } from './iconMap.js';
-import { normalizeUrl, fetchTitle, getFaviconUrl, isSafeHttpUrl } from '../metadata.js';
+import { normalizeUrl, fetchTitle, getFaviconUrl, isSafeHttpUrl, bookmarkLabel } from '../metadata.js';
 
 const emptyForm = { url: '', title: '', categoryId: '' };
 
@@ -74,7 +74,7 @@ export default function AddBookmarkModal({
     const url = normalizeUrl(form.url);
     onSubmit({
       url,
-      title: form.title.trim() || url,
+      title: bookmarkLabel({ title: form.title, url }),
       favicon: getFaviconUrl(url),
       categoryId: form.categoryId,
     });

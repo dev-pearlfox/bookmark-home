@@ -84,15 +84,36 @@ export function isPrivateHost(url) {
     || (a === 192 && b === 168);
 }
 
+// Country-code second-level domains, e.g. bbc.co.uk -> the name is "bbc", not "bbc.co".
+const SECOND_LEVEL_TLD = /\.(co|com|org|net|gov|edu|ac)\.[a-z]{2}$/i;
+const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
+
 /** Prettify a domain into a plausible title as a fallback. */
 export function domainToTitle(url) {
   const domain = getDomain(url);
-  const base = domain.split('.').slice(0, -1).join('.') || domain;
+  if (IPV4.test(domain)) return domain; // "192.168.1.5" has no name to extract
+  const withoutTld = domain.replace(SECOND_LEVEL_TLD, '');
+  const base = withoutTld !== domain
+    ? withoutTld
+    : domain.split('.').slice(0, -1).join('.') || domain;
   return base
     .split(/[-_.]/)
     .filter(Boolean)
     .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
     .join(' ');
+}
+
+/**
+ * The label to show for a bookmark. Uses the saved title when it is a real
+ * one; when it is missing, blank, or just the URL pasted in as the title,
+ * derives a readable name from the URL instead (https://www.github.com/x
+ * becomes "Github").
+ */
+export function bookmarkLabel({ title, url } = {}) {
+  const t = (title || '').trim();
+  const isJustAUrl = /^(https?:\/\/|www\.)\S+$/i.test(t);
+  if (t && !isJustAUrl) return t;
+  return (url && domainToTitle(url)) || t || url || '';
 }
 
 /**

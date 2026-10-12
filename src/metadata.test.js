@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   domainToTitle,
+  bookmarkLabel,
   fetchTitle,
   getDomain,
   getFaviconUrl,
@@ -199,5 +200,39 @@ describe('fetchTitle', () => {
     const fetchMock = stubFetch(async () => ({}));
     await fetchTitle('');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('domainToTitle: multi-part TLDs and IPs', () => {
+  it('drops a country second-level domain as a whole', () => {
+    expect(domainToTitle('https://www.bbc.co.uk/news')).toBe('Bbc');
+    expect(domainToTitle('https://shop.example.com.au')).toBe('Shop Example');
+  });
+  it('leaves an IP address alone instead of mangling it', () => {
+    expect(domainToTitle('http://192.168.1.5:8080/x')).toBe('192.168.1.5');
+  });
+});
+
+describe('bookmarkLabel', () => {
+  it('keeps a real saved title untouched', () => {
+    expect(bookmarkLabel({ title: 'My Project Board', url: 'https://trello.com/b/1' })).toBe('My Project Board');
+    expect(bookmarkLabel({ title: '  Padded  ', url: 'https://a.com' })).toBe('Padded');
+  });
+  it('derives a name from the URL when the title is missing or blank', () => {
+    expect(bookmarkLabel({ title: '', url: 'https://www.github.com/dev/repo' })).toBe('Github');
+    expect(bookmarkLabel({ title: '   ', url: 'https://docs.example.com' })).toBe('Docs Example');
+    expect(bookmarkLabel({ url: 'https://youtube.com' })).toBe('Youtube');
+  });
+  it('treats a URL pasted in as the title as "no title"', () => {
+    expect(bookmarkLabel({ title: 'https://www.github.com/dev/repo', url: 'https://www.github.com/dev/repo' })).toBe('Github');
+    expect(bookmarkLabel({ title: 'www.wikipedia.org', url: 'https://wikipedia.org' })).toBe('Wikipedia');
+  });
+  it('does not mistake a title that merely mentions a URL for one', () => {
+    expect(bookmarkLabel({ title: 'See https://x.com for more', url: 'https://x.com' })).toBe('See https://x.com for more');
+  });
+  it('never returns an empty label when something is available', () => {
+    expect(bookmarkLabel({ title: '', url: '' })).toBe('');
+    expect(bookmarkLabel()).toBe('');
+    expect(bookmarkLabel({ title: 'Only title', url: '' })).toBe('Only title');
   });
 });
