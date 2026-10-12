@@ -1,0 +1,84 @@
+/* Move the color stripe from left edge → top edge in horizontal mode */
+.pf-col[data-layout="horizontal"]::before {
+  left: 12px;
+  right: 12px;
+  top: 0;
+  bottom: auto;
+  width: auto;
+  height: 3px;
+  border-radius: 0 0 6px 6px;
+}
+
+/* Grip: was left-center → move to top-center (always visible) */
+.pf-col[data-layout="horizontal"] .pf-col__grip {
+  left: 50%;
+  top: 3px;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 14px;
+  opacity: 0.9;
+}
+.pf-col[data-layout="horizontal"] .pf-col__grip:hover {
+  transform: translate(-50%, -1px);
+  opacity: 1;
+}
+
+/* Nudge inner padding so the round resize button at the bottom doesn't
+   hide the last card / + slot */
+.pf-col[data-layout="horizontal"] {
+  padding-bottom: 34px;
+}
+
+/* Body: horizontal shelf → single vertical stack inside each kanban column */
+.pf-col[data-layout="horizontal"] .pf-col__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-snap-type: none;
+  min-height: 60px;
+}
+
+.pf-col[data-layout="horizontal"] .pf-col__body .pf-card {
+  width: auto;
+  flex: none;
+  scroll-snap-align: none;
+}
+
+.pf-col[data-layout="horizontal"] .pf-col__slot {
+  width: auto;
+  scroll-snap-align: none;
+}
+
+.pf-cols[data-layout="horizontal"] {
+  grid-auto-columns: minmax(224px, 1fr);
+}
+
+/* Add-category placeholder: horizontal band → tall column.
+   Matches the default column height so the row visually aligns. */
+.pf-col--add[data-layout="horizontal"] {
+  padding: 12px;
+  height: var(--pf-col-default-h);
+  min-height: var(--pf-col-default-h);
+}
+.pf-col--add[data-layout="horizontal"] .pf-col__add-cta {
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 22px 16px;
+  text-align: center;
+}
+.pf-col--add[data-layout="horizontal"] .pf-col__add-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  margin-bottom: 4px;
+}
+.pf-col--add[data-layout="horizontal"] .pf-col__add-sub {
+  text-align: center;
+  max-width: 200px;
+}
+.pf-col--add[data-layout="horizontal"] .pf-col__add-plus {
+  margin: 10px 0 0;
+}

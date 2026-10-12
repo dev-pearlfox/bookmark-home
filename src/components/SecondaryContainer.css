@@ -1,0 +1,83 @@
+/* Secondary container: an empty drop-zone stacked below each column in
+   horizontal view. Standalone class (not a .pf-col variant) so we don't
+   inherit the primary column's stripe, shadow, and glass fill. Also
+   drag-resizable via .pf-col__resize (reusing the primary column's grip
+   styles further down for consistency). */
+.pf-col-secondary {
+  position: relative;
+  width: 100%;
+  height: var(--pf-col-secondary-h);
+  min-height: var(--pf-col-secondary-h);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 8px 14px 20px;     /* bottom padding leaves room for the resize handle */
+  border-radius: var(--r-lg);
+  border: 1.5px dashed rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--ink-500);
+  transition: height var(--dur) var(--ease-out),
+              background var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out);
+}
+.pf-col-secondary[data-resizing="true"] { transition: none; }
+
+/* Clickable header CTA — icon in colored bubble + label. Mirrors the
+   primary column header's visual grammar so the two feel like siblings. */
+.pf-col-secondary__cta {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 6px 2px 2px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--ink-900);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+.pf-col-secondary__cta:hover {
+  background: var(--surface-hover);
+  transform: translateY(-1px);
+}
+.pf-col-secondary__cta:active { transform: translateY(0); }
+
+/* Icon bubble: piggybacks on .pf-col__icon (which the primary column
+   uses) for the category-tinted background via .pf-col--{color}. Only
+   size + shadow are overridden here so it visually matches the primary
+   header (which is 20px tall) instead of being a chunky outlier. */
+.pf-col-secondary__icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  box-shadow: var(--shadow-inner);
+}
+.pf-col-secondary__title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  color: var(--ink-900);
+}
+/* Small "+" affordance at the trailing edge, hints at the click-to-add
+   behaviour. Grows a touch on hover to feel interactive. */
+.pf-col-secondary__add {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+  border-radius: 999px;
+  color: var(--ink-500);
+  background: rgba(0, 0, 0, 0.04);
+  transition: background var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+.pf-col-secondary__cta:hover .pf-col-secondary__add {
+  color: var(--ink-900);
+  background: rgba(0, 0, 0, 0.08);
+  transform: rotate(90deg);
+}
+
