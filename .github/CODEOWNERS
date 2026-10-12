@@ -1,0 +1,13 @@
+# Every file needs the owner's review before it can merge into a protected
+# branch (enable "Require review from Code Owners" in branch protection).
+*                       @dev-pearlfox
+
+# Owner-protected "Heart logic" (see PROTECTED.md) — listed explicitly so
+# the intent is obvious even if the catch-all above is ever narrowed.
+/PROTECTED.md           @dev-pearlfox
+/src/defaultData.js     @dev-pearlfox
+/src/components/iconMap.js @dev-pearlfox
+
+# Deploy pipeline and legal terms.
+/.github/               @dev-pearlfox
+/LICENSE                @dev-pearlfox

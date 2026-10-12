@@ -1,0 +1,58 @@
+Bookmark Home — Proprietary License
+
+Copyright (c) 2026 PearlFox. All rights reserved.
+
+1. PERMISSION TO USE THE SERVICE
+   Anyone may access and use the hosted application at
+   https://bookmark-home.pearlfox.io ("the Service") free of charge for
+   personal or internal purposes, including adding, organizing and removing
+   their own bookmarks and categories.
+
+2. RESTRICTIONS
+   Except as expressly allowed in section 1 or by separate written
+   permission from PearlFox, you may NOT:
+     a. copy, reproduce or redistribute the source code, compiled code,
+        design, styles, icons or other assets of this project;
+     b. modify, adapt, translate or create derivative works of them;
+     c. host, deploy, mirror or offer your own copy or fork of the Service;
+     d. sell, rent, lease, sublicense or otherwise commercially exploit them;
+     e. remove or alter any copyright, license or attribution notice;
+     f. reverse engineer or decompile them, except to the extent applicable
+        law expressly permits despite this restriction.
+
+3. SOURCE VISIBILITY IS NOT A LICENSE
+   If this source code is viewable (for example in a public repository, or
+   through a web browser), that visibility is for transparency only and
+   grants no right beyond section 1. Contributions to the repository are
+   accepted only from people authorised by PearlFox.
+
+4. YOUR CONTENT
+   The bookmarks and categories you add remain yours. They are stored in
+   your own browser (and in a backup file only if you choose to create one);
+   they are not uploaded to PearlFox servers.
+
+5. THIRD-PARTY COMPONENTS
+   The Service includes open-source libraries that are licensed to you by
+   their respective authors under their own licenses. This license does not
+   change or replace those licenses and applies only to the PearlFox
+   original work.
+
+6. NO WARRANTY
+   THE SERVICE AND SOFTWARE ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+   KIND, EXPRESS OR IMPLIED, INCLUDING THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+
+7. LIMITATION OF LIABILITY
+   TO THE MAXIMUM EXTENT PERMITTED BY LAW, PEARLFOX SHALL NOT BE LIABLE FOR
+   ANY CLAIM, DAMAGES OR OTHER LIABILITY, INCLUDING LOSS OF DATA, ARISING
+   FROM OR IN CONNECTION WITH THE SERVICE OR ITS USE. YOU ARE ADVISED TO
+   KEEP A BACKUP OF YOUR BOOKMARKS.
+
+8. TERMINATION
+   Any use in breach of this license automatically ends your permission
+   under section 1. PearlFox may also withdraw or change the Service at any
+   time.
+
+9. PERMISSION REQUESTS
+   To request permission for anything not allowed above, contact PearlFox
+   through https://github.com/dev-pearlfox.
