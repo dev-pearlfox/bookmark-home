@@ -1,0 +1,35 @@
+name: CI
+
+# Quality gate for every pull request. Make this check REQUIRED in the
+# repo's branch-protection rules so nothing merges (and therefore nothing
+# deploys) unless lint, tests, build and the security audit are green.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, test, build, audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Third-party actions are pinned to full commit SHAs (the version in the
+      # comment is what Dependabot keeps up to date).
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      # Fails the PR on a known HIGH/CRITICAL advisory in any dependency.
+      - run: npm audit --audit-level=high

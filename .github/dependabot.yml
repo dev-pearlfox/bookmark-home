@@ -1,0 +1,23 @@
+version: 2
+
+updates:
+  # npm dependencies (also raises security-advisory PRs automatically)
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for routine bumps instead of one per package.
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  # GitHub Actions — keeps the SHA pins in .github/workflows/ current
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns: ["*"]
