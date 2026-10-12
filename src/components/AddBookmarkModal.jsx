@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import Modal from './Modal.jsx';
 import { getIcon } from './iconMap.js';
-import { normalizeUrl, fetchTitle, getFaviconUrl } from '../metadata.js';
+import { normalizeUrl, fetchTitle, getFaviconUrl, isSafeHttpUrl } from '../metadata.js';
 
 const emptyForm = { url: '', title: '', categoryId: '' };
 
@@ -62,7 +62,11 @@ export default function AddBookmarkModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.url, isEdit]);
 
-  const canSubmit = form.url.trim() && form.categoryId;
+  // Same rule the loader enforces (isSafeHttpUrl) — otherwise we'd happily
+  // save a link that gets silently dropped on the next reload.
+  const hasUrl = form.url.trim().length > 0;
+  const urlIsValid = isSafeHttpUrl(normalizeUrl(form.url));
+  const canSubmit = hasUrl && urlIsValid && form.categoryId;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -124,7 +128,14 @@ export default function AddBookmarkModal({
             placeholder="pearlfox.io"
             value={form.url}
             onChange={(e) => setForm({ ...form, url: e.target.value })}
+            aria-invalid={hasUrl && !urlIsValid ? 'true' : undefined}
+            aria-describedby={hasUrl && !urlIsValid ? 'pf-url-error' : undefined}
           />
+          {hasUrl && !urlIsValid && (
+            <p id="pf-url-error" className="pf-field__error" role="alert">
+              That doesn't look like a valid web address — try something like example.com
+            </p>
+          )}
         </div>
 
         <div className="pf-field">
