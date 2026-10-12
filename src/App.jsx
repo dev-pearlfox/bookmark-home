@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core';
+import {
+  DndContext, DragOverlay, KeyboardSensor, PointerSensor,
+  useSensor, useSensors,
+} from '@dnd-kit/core';
 
 import Header from './components/Header.jsx';
 import BookmarkColumns from './components/BookmarkColumns.jsx';
@@ -14,6 +17,8 @@ import { loadState, saveState } from './storage.js';
 import { writeBackup } from './backup.js';
 import { buildSnapshot, serializeSnapshot, splitSnapshot } from './snapshot.js';
 import { dropBookmark, reorderCategories } from './reorder.js';
+import { SCREEN_READER_INSTRUCTIONS, createAnnouncements } from './dndAnnouncements.js';
+import { collisionDetection, keyboardCoordinates } from './dndCollision.js';
 
 import './App.css';
 
@@ -39,7 +44,7 @@ function seedState() {
 
 export default function App() {
   // Array position IS the display order (drag-and-drop reorders the array and
-  // saveState persists it), so loaded bookmarks must NOT be re-sorted here -
+  // saveState persists it), so loaded bookmarks must NOT be re-sorted here —
   // an earlier createdAt sort silently undid every reorder on reload.
   const [state, setState] = useState(() => loadState() || seedState());
   const [isAddBookmarkOpen, setAddBookmarkOpen] = useState(false);
@@ -198,8 +203,20 @@ export default function App() {
 
   // --- DnD wiring ---
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    // Keyboard drag-and-drop (WCAG 2.1.1): Space/Enter on a drag handle, arrow
+    // keys to move, Space/Enter to drop, Escape to cancel.
+    useSensor(KeyboardSensor, { coordinateGetter: keyboardCoordinates }),
   );
+
+  // Spoken feedback uses real titles/names instead of dnd-kit's raw ids.
+  const accessibility = useMemo(() => ({
+    announcements: createAnnouncements({
+      bookmarkTitle: (id) => bookmarks.find((b) => b.id === id)?.title,
+      categoryName: (id) => categories.find((c) => c.id === id)?.name,
+    }),
+    screenReaderInstructions: SCREEN_READER_INSTRUCTIONS,
+  }), [bookmarks, categories]);
 
   const handleDragStart = (event) => {
     const data = event.active?.data?.current;
@@ -241,7 +258,8 @@ export default function App() {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      accessibility={accessibility}
+      collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={() => { setActiveDragBookmark(null); setActiveDragCategory(null); }}

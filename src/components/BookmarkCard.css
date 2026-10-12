@@ -104,7 +104,10 @@
   transition: opacity var(--dur-fast) var(--ease-out);
 }
 
-.pf-card:hover .pf-card__actions { opacity: 1; }
+/* Revealed on hover AND on keyboard focus — otherwise a keyboard user would
+   tab onto buttons they can't see (WCAG 2.4.7 Focus Visible). */
+.pf-card:hover .pf-card__actions,
+.pf-card:focus-within .pf-card__actions { opacity: 1; }
 
 .pf-card__action {
   width: 22px;
@@ -123,6 +126,14 @@
 }
 
 .pf-card__action:hover { transform: translateY(-1px); }
+
+/* Drag handle: same chip as the other actions, but with a grab cursor. */
+.pf-card__action--handle { cursor: grab; touch-action: none; }
+.pf-card__action--handle:active { cursor: grabbing; }
+.pf-card__action--handle:hover {
+  color: var(--ink-900);
+  background: var(--surface-hover);
+}
 
 .pf-card__action--edit:hover {
   color: var(--ink-900);

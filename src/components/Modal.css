@@ -113,10 +113,23 @@
 }
 
 .pf-input:focus {
-  outline: none;
   background: white;
-  box-shadow: 0 0 0 4px rgba(180, 160, 240, 0.25);
+  box-shadow: 0 0 0 4px rgba(180, 160, 240, 0.25); /* decorative glow only */
 }
+
+/* The real focus indicator: a solid 2px ring (5.5:1 on white, WCAG 1.4.11).
+   The global input:focus-visible rule would also shrink the corner radius, so
+   it is restated here. */
+.pf-input:focus-visible {
+  outline: 2px solid var(--ink-500);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+/* The dialog container takes programmatic focus (tabIndex=-1) when it has no
+   field to focus; it isn't a control, so no ring. */
+.pf-modal:focus,
+.pf-popover:focus { outline: none; }
 
 .pf-input[aria-invalid="true"] {
   box-shadow: 0 0 0 2px #a32a3d;

@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
+import { useFocusTrap } from './useFocusTrap.js';
 import './Modal.css';
 
 const POPOVER_WIDTH = 380;
@@ -44,6 +45,10 @@ function computePopoverPosition(rect, popoverHeight) {
 export default function Modal({ open, onClose, title, subtitle, children, footer, anchorRect }) {
   const contentRef = useRef(null);
   const [pos, setPos] = useState(() => computePopoverPosition(anchorRect));
+  const titleId = useId();
+  const subtitleId = useId();
+
+  useFocusTrap(open, contentRef);
 
   useEffect(() => {
     if (!open) return;
@@ -89,12 +94,14 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
         data-placement={isPopover ? pos.placement : undefined}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby={titleId}
+        aria-describedby={subtitle ? subtitleId : undefined}
+        tabIndex={-1}
       >
         <div className="pf-modal__header">
           <div>
-            <h3 className="pf-modal__title">{title}</h3>
-            {subtitle && <p className="pf-modal__subtitle">{subtitle}</p>}
+            <h3 id={titleId} className="pf-modal__title">{title}</h3>
+            {subtitle && <p id={subtitleId} className="pf-modal__subtitle">{subtitle}</p>}
           </div>
           <button className="pf-modal__close" onClick={onClose} aria-label="Close">
             <X size={18} />
