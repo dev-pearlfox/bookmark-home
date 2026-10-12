@@ -17,7 +17,9 @@
   --ink-900: #201a35;
   --ink-700: #3d3560;
   --ink-500: #6b6486;
-  --ink-300: #a8a2c1;
+  /* ink-300 is for NON-TEXT only (icons, borders): 3.3:1 on the page bg
+     meets WCAG 1.4.11 (3:1). Never use it for text — use ink-500 (5.1:1). */
+  --ink-300: #8a84a6;
 
   /* Surfaces */
   --surface-glass:      rgba(255, 255, 255, 0.55);

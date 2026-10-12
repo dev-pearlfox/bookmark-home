@@ -129,7 +129,7 @@ export default function AddBookmarkModal({
 
         <div className="pf-field">
           <label className="pf-field__label" htmlFor="pf-title">
-            Title {loading && <span style={{ color: 'var(--ink-300)', textTransform: 'none' }}>· fetching…</span>}
+            Title {loading && <span style={{ color: 'var(--ink-500)', textTransform: 'none' }}>· fetching…</span>}
           </label>
           <input
             id="pf-title"
