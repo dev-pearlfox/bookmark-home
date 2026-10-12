@@ -13,11 +13,12 @@ import AddCategoryModal from './components/AddCategoryModal.jsx';
 import { useHeightsMap } from './components/useHeightsMap.js';
 
 import { DEFAULT_CATEGORIES, SAMPLE_BOOKMARKS } from './defaultData.js';
-import { loadState, saveState } from './storage.js';
+import { loadState, saveState, loadZoom, saveZoom } from './storage.js';
 import { writeBackup } from './backup.js';
 import { buildSnapshot, serializeSnapshot, splitSnapshot } from './snapshot.js';
 import { dropBookmark, reorderCategories } from './reorder.js';
 import { hasLinkPayload, trackInternalDrags } from './linkDrop.js';
+import { clampZoom } from './zoom.js';
 import { bookmarkLabel, fetchTitle, getDomain, getFaviconUrl } from './metadata.js';
 import {
   MAX_CONTAINERS_PER_COLUMN, addContainer, categoryLabel, deleteColumn, deleteContainer,
@@ -59,6 +60,14 @@ export default function App() {
   // Layout always starts in Column View on load — no persistence. Users
   // can toggle to Shelves during a session, but a reload resets them.
   const [layout, setLayout] = useState('horizontal');
+
+  // Page zoom (this site only). Applied as the --pf-zoom variable on <html>;
+  // index.css turns it into CSS `zoom`. Saved so it survives reloads.
+  const [zoom, setZoom] = useState(() => clampZoom(loadZoom()));
+  useEffect(() => {
+    document.documentElement.style.setProperty('--pf-zoom', String(zoom / 100));
+    saveZoom(zoom);
+  }, [zoom]);
   // Per-category custom heights (column view only), keyed by category id —
   // columns and containers alike. Missing entry → the CSS default.
   const [categoryHeights, setCategoryHeight, replaceCategoryHeights] = useHeightsMap(COL_HEIGHTS_KEY);
@@ -313,6 +322,8 @@ export default function App() {
           onRestore={handleRestore}
           layout={layout}
           onToggleLayout={() => setLayout((l) => (l === 'vertical' ? 'horizontal' : 'vertical'))}
+          zoom={zoom}
+          onZoomChange={setZoom}
         />
 
         <main className="pf-main">
@@ -387,6 +398,7 @@ export default function App() {
       <div className="pf-toast" role="status">{dropMessage}</div>
 
       <DragOverlay
+        className="pf-drag-overlay"
         dropAnimation={{ duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }}
       >
         {activeDragBookmark ? (

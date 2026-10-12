@@ -1,5 +1,6 @@
 import { Sparkles, Rows3, Columns3 } from 'lucide-react';
 import BackupControl from './BackupControl.jsx';
+import ZoomControl from './ZoomControl.jsx';
 import './Header.css';
 
 /**
@@ -42,6 +43,8 @@ export default function Header({
   onRestore,
   layout,
   onToggleLayout,
+  zoom,
+  onZoomChange,
 }) {
   return (
     <header className="pf-header glass-strong">
@@ -56,6 +59,7 @@ export default function Header({
       </div>
 
       <div className="pf-header__actions">
+        <ZoomControl zoom={zoom} onChange={onZoomChange} />
         <ViewSwitch layout={layout} onToggleLayout={onToggleLayout} />
         <BackupControl
           getStateSnapshot={getStateSnapshot}

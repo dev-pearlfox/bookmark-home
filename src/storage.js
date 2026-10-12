@@ -64,3 +64,23 @@ export function saveMap(storageKey, map) {
     console.warn(`[storage] failed to save ${storageKey}`, err);
   }
 }
+
+/* --- Page zoom (a percentage; its own key, per this site only) --- */
+const ZOOM_KEY = 'pf.bookmarkHome.zoom.v1';
+
+/** Raw saved value (or null). The caller validates it with clampZoom. */
+export function loadZoom() {
+  try {
+    return localStorage.getItem(ZOOM_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveZoom(percent) {
+  try {
+    localStorage.setItem(ZOOM_KEY, String(percent));
+  } catch (err) {
+    console.warn('[storage] failed to save zoom', err);
+  }
+}

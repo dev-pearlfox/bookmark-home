@@ -38,7 +38,7 @@
   box-shadow: var(--shadow-lift), var(--shadow-inner);
   animation: pf-pop-in 200ms var(--ease-out);
   transform-origin: top left;
-  max-height: calc(100vh - 24px);
+  max-height: calc(100vh / var(--pf-zoom, 1) - 24px);
   overflow-y: auto;
 }
 .pf-popover[data-placement="above"] { transform-origin: bottom left; }

@@ -1,6 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { useFocusTrap } from './useFocusTrap.js';
+import { readZoomFactor } from '../zoom.js';
 import './Modal.css';
 
 const POPOVER_WIDTH = 380;
@@ -10,10 +11,18 @@ const POPOVER_GAP = 10;
  * Compute a viewport-safe position for a popover anchored to `rect`.
  * Prefers below-and-aligned-left; falls back to above if there's no room.
  */
-function computePopoverPosition(rect, popoverHeight) {
-  if (!rect) return null;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+function computePopoverPosition(screenRect, popoverHeight) {
+  if (!screenRect) return null;
+  // The anchor rect and the window size are in screen pixels, but `top` and
+  // `left` are applied in CSS pixels, which page zoom scales. Work in CSS px.
+  const zoom = readZoomFactor();
+  const rect = {
+    top: screenRect.top / zoom,
+    bottom: screenRect.bottom / zoom,
+    left: screenRect.left / zoom,
+  };
+  const vw = window.innerWidth / zoom;
+  const vh = window.innerHeight / zoom;
   const margin = 8;
   const h = popoverHeight || 300; // rough estimate before measurement
 

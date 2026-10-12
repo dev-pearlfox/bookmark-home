@@ -51,6 +51,9 @@
 
 * { box-sizing: border-box; }
 
+/* Page zoom (see App.jsx): one variable, set from the header slider. */
+html { zoom: var(--pf-zoom, 1); }
+
 html, body, #root {
   height: 100%;
   margin: 0;

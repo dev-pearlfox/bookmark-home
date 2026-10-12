@@ -1,0 +1,51 @@
+/* Header zoom control: [-] slider [+] 100% */
+.pf-zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--surface-frost);
+  border: var(--border-soft);
+  color: var(--ink-700);
+}
+
+.pf-zoom__btn {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ink-700);
+  background: rgba(255, 255, 255, 0.7);
+  transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.pf-zoom__btn:hover:not(:disabled) { background: var(--surface-hover); transform: translateY(-1px); }
+.pf-zoom__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.pf-zoom__slider {
+  width: 96px;
+  margin: 0;
+  accent-color: var(--ink-500);
+  cursor: pointer;
+}
+
+/* The percentage doubles as the reset button. Fixed width so the header
+   does not jiggle between "70%" and "200%". */
+.pf-zoom__value {
+  min-width: 44px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--ink-900);
+}
+.pf-zoom__value:hover:not(:disabled) { background: var(--surface-hover); }
+.pf-zoom__value:disabled { cursor: default; color: var(--ink-500); }
+
+@media (max-width: 1000px) {
+  .pf-zoom__slider { width: 64px; }
+}

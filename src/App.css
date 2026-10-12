@@ -3,8 +3,11 @@ html, body, #root {
 }
 
 .pf-app {
-  min-height: 100vh;
-  height: 100vh;             /* pin to viewport so children can flex-share it */
+  /* Pin to the viewport so children can flex-share it. CSS zoom scales the
+     element but NOT vh, so divide by the zoom or the page is too short at
+     <100% and scrolls at >100%. */
+  min-height: calc(100vh / var(--pf-zoom, 1));
+  height: calc(100vh / var(--pf-zoom, 1));
   display: flex;
   flex-direction: column;
 }
@@ -49,3 +52,11 @@ html, body, #root {
   pointer-events: none;
 }
 .pf-toast:empty { display: none; }
+
+/* dnd-kit positions the floating card from screen-pixel rects, but CSS zoom
+   would scale those numbers again (wrong size, offset from the cursor). So the
+   wrapper cancels the page zoom (its left/top/width/height/transform are then
+   screen pixels), and its content re-applies it, so the card still looks
+   exactly like the one you picked up. */
+.pf-drag-overlay { zoom: calc(1 / var(--pf-zoom, 1)); }
+.pf-drag-overlay > * { zoom: var(--pf-zoom, 1); }

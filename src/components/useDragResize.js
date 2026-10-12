@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { readZoomFactor } from '../zoom.js';
 
 /**
  * Shared vertical drag-to-resize hook. Wire the returned `handlers` onto
@@ -34,9 +35,13 @@ export function useDragResize({
     if (!target) return;
     e.preventDefault();
     e.stopPropagation();
+    // Pointer and getBoundingClientRect are in screen pixels; the height we
+    // set is in CSS pixels, which page zoom scales. Convert once, up front.
+    const zoom = readZoomFactor();
     state.current = {
+      zoom,
       startY: e.clientY,
-      startHeight: target.getBoundingClientRect().height,
+      startHeight: target.getBoundingClientRect().height / zoom,
     };
     setIsResizing(true);
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* noop */ }
@@ -44,7 +49,7 @@ export function useDragResize({
 
   const onPointerMove = useCallback((e) => {
     if (!state.current) return;
-    const delta = e.clientY - state.current.startY;
+    const delta = (e.clientY - state.current.startY) / state.current.zoom;
     const next = Math.max(min, Math.min(max, state.current.startHeight + delta));
     onResize(next);
   }, [onResize, min, max]);

@@ -2,7 +2,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 12px 24px;
+  flex-wrap: wrap; /* zoomed in, the window is effectively narrower: wrap instead of squeezing */
+  container-type: inline-size; /* lets the compact rules below react to zoom (media queries cannot) */
   padding: 14px 22px;
   border-radius: var(--r-lg);
   margin: 18px 24px 8px;
@@ -51,8 +53,14 @@
   align-items: center;
   gap: 10px;
   flex: 1;
+  flex-wrap: wrap;
   justify-content: flex-end;
 }
+
+/* Labels must never wrap onto a second line (that is what a squeezed header
+   did at high zoom); the groups wrap as whole units instead. */
+.pf-view-switch,
+.pf-zoom { white-space: nowrap; flex: none; }
 
 /* -----------------------------------------------------------------
    View switch — segmented toggle with a sliding thumb.
@@ -133,6 +141,16 @@
   .pf-view-switch { gap: 8px; padding: 0 10px; }
   .pf-view-switch__side { font-size: 0; }         /* hide text */
   .pf-view-switch__side > svg { font-size: 14px; }/* icon stays */
+}
+
+/* Compact header. Media queries see the real window, not the page zoom, so
+   at 200% on a normal laptop they never fire and the header grows to 3 rows.
+   A container query measures the header itself, which zoom does shrink. */
+@container (max-width: 1000px) {
+  .pf-header__titles p { display: none; }                 /* the tagline */
+  .pf-view-switch { gap: 8px; padding: 0 10px; }
+  .pf-view-switch__side { font-size: 0; }                 /* labels off, icons stay */
+  .pf-view-switch__side > svg { font-size: 14px; }
 }
 
 @media (max-width: 720px) {
