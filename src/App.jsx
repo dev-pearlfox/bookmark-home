@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
@@ -12,7 +12,8 @@ import { useHeightsMap } from './components/useHeightsMap.js';
 
 import { DEFAULT_CATEGORIES, SAMPLE_BOOKMARKS } from './defaultData.js';
 import { loadState, saveState } from './storage.js';
-import { tryLoadBackupOnStartup, writeBackup } from './backup.js';
+import { writeBackup } from './backup.js';
+import { buildSnapshot, serializeSnapshot, splitSnapshot } from './snapshot.js';
 
 import './App.css';
 
@@ -33,7 +34,6 @@ function seedState() {
   return {
     categories: DEFAULT_CATEGORIES,
     bookmarks: SAMPLE_BOOKMARKS,
-    activeCategoryId: 'all',
   };
 }
 
@@ -62,62 +62,56 @@ export default function App() {
   // Per-category custom heights (horizontal/column view only). Missing
   // entries → container uses the CSS default. Two parallel maps: one for
   // the primary column, one for the secondary container beneath it.
-  const [categoryHeights, setCategoryHeight] = useHeightsMap(COL_HEIGHTS_KEY);
-  const [secondaryHeights, setSecondaryHeight] = useHeightsMap(SECONDARY_HEIGHTS_KEY);
+  const [categoryHeights, setCategoryHeight, replaceCategoryHeights] = useHeightsMap(COL_HEIGHTS_KEY);
+  const [secondaryHeights, setSecondaryHeight, replaceSecondaryHeights] = useHeightsMap(SECONDARY_HEIGHTS_KEY);
 
   /* Per-category mini-grid of extra containers beyond primary+secondary.
-     Missing entry ⇒ {cols: 0, rows: 0} ⇒ the default 1×2 layout. */
-  const [containerGrid, setContainerGridEntry] = useHeightsMap(CONTAINER_GRID_KEY);
+     Missing entry ⇒ {rows: 0} ⇒ the default 1×2 layout. */
+  const [containerGrid, setContainerGridEntry, replaceContainerGrid] = useHeightsMap(CONTAINER_GRID_KEY);
 
   const growContainerGrid = useCallback((categoryId) => {
     if (!categoryId) return;
-    const cur = containerGrid[categoryId] || { cols: 0, rows: 0 };
-    if (cur.rows >= MAX_ROWS_PER_SUBCOL - 2) return;
-    setContainerGridEntry(categoryId, { ...cur, rows: cur.rows + 1 });
+    const rows = containerGrid[categoryId]?.rows || 0;
+    if (rows >= MAX_ROWS_PER_SUBCOL - 2) return;
+    setContainerGridEntry(categoryId, { rows: rows + 1 });
   }, [containerGrid, setContainerGridEntry]);
 
-  const columnsRef = useRef(null);
-
-  // Persist state — localStorage is the fast primary cache, backup file is
-  // the durable secondary (survives cache clears / reinstalls).
+  // Persist state — localStorage is the fast primary cache; the optional
+  // backup file (below) is the durable copy that survives a site-data wipe.
   useEffect(() => { saveState(state); }, [state]);
 
-  // Debounced backup writer — coalesces rapid state changes into one write.
-  const backupTimer = useRef(null);
+  // Everything a backup needs: app state + the per-category sizing maps.
+  const snapshot = useMemo(
+    () => buildSnapshot(state, {
+      colHeights: categoryHeights,
+      secondaryHeights,
+      containerGrid,
+    }),
+    [state, categoryHeights, secondaryHeights, containerGrid],
+  );
+
+  // Debounced backup writer — coalesces rapid changes into one write.
   useEffect(() => {
-    if (backupTimer.current) clearTimeout(backupTimer.current);
-    backupTimer.current = setTimeout(() => {
-      writeBackup(JSON.stringify(state, null, 2));
-    }, 500);
-    return () => backupTimer.current && clearTimeout(backupTimer.current);
-  }, [state]);
+    const timer = setTimeout(() => writeBackup(serializeSnapshot(snapshot)), 500);
+    return () => clearTimeout(timer);
+  }, [snapshot]);
 
-  // On startup, if a backup file handle is remembered AND its content looks
-  // newer/richer than what localStorage has, offer to restore automatically.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const backup = await tryLoadBackupOnStartup();
-      if (cancelled || !backup?.state) return;
-      // Simple heuristic: use the backup if we currently have no bookmarks
-      // (fresh browser / cache-cleared) but the file has some.
-      const local = state?.bookmarks?.length || 0;
-      const remote = backup.state?.bookmarks?.length || 0;
-      if (local === 0 && remote > 0) {
-        setState(backup.state);
-      }
-    })();
-    return () => { cancelled = true; };
-    // Run once on mount only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const getStateSnapshot = useCallback(() => snapshot, [snapshot]);
+  const handleRestore = useCallback((raw) => {
+    const parsed = splitSnapshot(raw);
+    if (!parsed) return; // backup.js already rejects bad files; this is the safety net
+    setState(parsed.state);
+    if (parsed.dropped) {
+      alert(`Restored, but skipped ${parsed.dropped} bookmark(s) with unsafe links (only http/https are allowed).`);
+    }
+    // Layout maps are optional (older backups predate them) — replaceAll
+    // ignores undefined, leaving current sizes untouched in that case.
+    replaceCategoryHeights(parsed.layout.colHeights);
+    replaceSecondaryHeights(parsed.layout.secondaryHeights);
+    replaceContainerGrid(parsed.layout.containerGrid);
+  }, [replaceCategoryHeights, replaceSecondaryHeights, replaceContainerGrid]);
 
-  const getStateSnapshot = useCallback(() => state, [state]);
-  const handleRestore = useCallback((restored) => {
-    if (restored && typeof restored === 'object') setState(restored);
-  }, []);
-
-  const { categories, bookmarks, activeCategoryId } = state;
+  const { categories, bookmarks } = state;
 
   const bookmarksByCategory = useMemo(() => {
     const map = {};
@@ -214,18 +208,20 @@ export default function App() {
   };
 
   const deleteCategory = (id) => {
+    // Guard + alert live OUTSIDE the updater: updaters must be pure, and
+    // StrictMode runs them twice in dev (=> two alerts).
+    if (categories.length <= 1) {
+      alert('Keep at least one category — this is your last one.');
+      return;
+    }
     setState((s) => {
       const remaining = s.categories.filter((c) => c.id !== id);
       const fallback = remaining[0]?.id;
-      if (!fallback) {
-        alert('Keep at least one category — this is your last one.');
-        return s;
-      }
+      if (!fallback) return s;
       return {
         ...s,
         categories: remaining,
         bookmarks: s.bookmarks.map((b) => (b.categoryId === id ? { ...b, categoryId: fallback } : b)),
-        activeCategoryId: s.activeCategoryId === id ? 'all' : s.activeCategoryId,
       };
     });
   };
@@ -309,7 +305,7 @@ export default function App() {
         />
 
         <main className="pf-main">
-          <div className="pf-cols-scroll" ref={columnsRef}>
+          <div className="pf-cols-scroll">
             <BookmarkColumns
               layout={layout}
               categoryHeights={categoryHeights}

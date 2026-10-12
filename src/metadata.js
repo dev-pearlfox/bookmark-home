@@ -5,6 +5,8 @@
  *   because it's a plain <img> URL (we don't fetch it, just point <img> at it).
  * - Titles:   microlink.io free tier. Client-side, CORS-enabled.
  *   Falls back to the domain name if the API is down or times out.
+ *   Private/internal hosts are NEVER sent to it (see isPrivateHost) — the
+ *   service can't reach them anyway, and we'd just be leaking the URL.
  *
  * Every function is pure-ish (no state) so components can call freely.
  */
@@ -14,6 +16,21 @@ export function normalizeUrl(input) {
   if (!trimmed) return '';
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return `https://${trimmed}`;
+}
+
+/**
+ * Allow-list for links we are willing to put in an `href`: absolute
+ * http(s) URLs only. Blocks `javascript:`, `data:`, `vbscript:`, `file:` etc.
+ * (Defence in depth — don't rely on the UI framework to catch these.)
+ */
+export function isSafeHttpUrl(url) {
+  if (typeof url !== 'string') return false;
+  try {
+    const { protocol } = new URL(url);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
 
 export function getDomain(url) {
@@ -27,6 +44,30 @@ export function getDomain(url) {
 export function getFaviconUrl(url, size = 64) {
   const domain = getDomain(url);
   return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=${size}`;
+}
+
+/**
+ * True for hosts a public service can't (and shouldn't) see: localhost,
+ * single-label intranet names, *.local/*.internal/*.lan/*.home.arpa,
+ * and private/loopback/link-local IPv4 + IPv6 literals.
+ */
+export function isPrivateHost(url) {
+  let host;
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+  if (host.startsWith('[')) return true; // any IPv6 literal: treat as private/unusual
+  if (host === 'localhost' || !host.includes('.')) return true;
+  if (/\.(local|internal|lan|localhost|home\.arpa)$/.test(host)) return true;
+  const m = host.match(/^(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/);
+  if (!m) return false;
+  const [a, b] = [Number(m[1]), Number(m[2])];
+  return a === 10 || a === 127 || a === 0
+    || (a === 169 && b === 254)
+    || (a === 172 && b >= 16 && b <= 31)
+    || (a === 192 && b === 168);
 }
 
 /** Prettify a domain into a plausible title as a fallback. */
@@ -46,7 +87,7 @@ export function domainToTitle(url) {
  */
 export async function fetchTitle(url, { timeoutMs = 4000 } = {}) {
   const fallback = domainToTitle(url);
-  if (!url) return fallback;
+  if (!url || isPrivateHost(url)) return fallback;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

@@ -1,0 +1,32 @@
+.pf-error {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.pf-error__card {
+  max-width: 420px;
+  padding: 28px;
+  border-radius: var(--r-lg);
+  text-align: center;
+}
+
+.pf-error__card h1 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  color: var(--ink-900);
+}
+
+.pf-error__card p {
+  margin: 0 0 20px;
+  color: var(--ink-700);
+  line-height: 1.5;
+}
+
+.pf-error__actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}

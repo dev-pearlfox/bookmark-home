@@ -6,14 +6,18 @@
  *  - The FileSystemFileHandle is persisted in IndexedDB (localStorage can't
  *    hold handles because they're structured-clone objects).
  *  - Every state change writes the JSON to that file (debounced by the caller).
- *  - On next load, we grab the handle from IDB, re-request read/write
- *    permission (browser prompts on first user gesture) and can restore
- *    state from the file — surviving cache clears, browser reinstalls, and
- *    OS reinstalls (as long as the file itself still lives on disk).
+ *  - Restoring is MANUAL: after a wipe, the user picks the file again via
+ *    `pickAndReadBackupFile`. There is intentionally no silent auto-restore
+ *    on startup — the stored handle lives in IndexedDB, which "clear site
+ *    data" wipes together with localStorage, so the handle is exactly what
+ *    you'd have lost. The file itself survives on disk, and that's what
+ *    makes manual restore work (cache clears, reinstalls, new machines).
  *
  * If the API is missing (Firefox / Safari), everything gracefully no-ops
  * and callers just fall back to plain localStorage.
  */
+
+import { isValidState } from './snapshot.js';
 
 const IDB_NAME = 'pf-bookmark-home';
 const IDB_STORE = 'handles';
@@ -125,7 +129,11 @@ export async function chooseBackupFile(initialContentJson) {
 
 /**
  * Ask the user to point at an existing backup file (for restore-after-wipe).
- * Returns { name, state } if a valid JSON was loaded, else null.
+ * Returns:
+ *   { name, state }  valid backup — also adopted as the ongoing backup file
+ *   { invalid: true } file isn't a Bookmark Home backup — NOT adopted, so we
+ *                     never start overwriting some unrelated JSON file
+ *   null              cancelled / unsupported / permission denied
  */
 export async function pickAndReadBackupFile() {
   if (!isBackupSupported()) return null;
@@ -140,29 +148,12 @@ export async function pickAndReadBackupFile() {
     const file = await handle.getFile();
     const text = await file.text();
     const state = safeParse(text);
-    if (!state) return null;
+    if (!state) return { invalid: true };
     // Keep this file as the ongoing backup destination
     await idbSet(IDB_KEY, handle);
     return { name: handle.name, state };
   } catch (err) {
     if (err?.name !== 'AbortError') console.warn('[backup] pickAndReadBackupFile failed', err);
-    return null;
-  }
-}
-
-/** Try to load the stored backup file's contents on app startup. */
-export async function tryLoadBackupOnStartup() {
-  const handle = await getBackupHandle();
-  if (!handle) return null;
-  // Don't prompt for permission on load — we only READ silently if already granted.
-  try {
-    if ((await handle.queryPermission({ mode: 'read' })) !== 'granted') return null;
-    const file = await handle.getFile();
-    const text = await file.text();
-    const state = safeParse(text);
-    return state ? { name: handle.name, state } : null;
-  } catch (err) {
-    console.warn('[backup] tryLoadBackupOnStartup failed', err);
     return null;
   }
 }
@@ -193,10 +184,11 @@ export async function clearBackupFile() {
 
 /* --- Utilities ------------------------------------------------------- */
 
+/** Parse JSON and return it only if it's a structurally valid snapshot. */
 function safeParse(text) {
   try {
     const obj = JSON.parse(text);
-    if (obj && typeof obj === 'object') return obj;
-  } catch {}
+    if (isValidState(obj)) return obj;
+  } catch { /* not JSON */ }
   return null;
 }

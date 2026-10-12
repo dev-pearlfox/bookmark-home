@@ -7,6 +7,7 @@ import {
   pickAndReadBackupFile,
   clearBackupFile,
 } from '../backup.js';
+import { serializeSnapshot } from '../snapshot.js';
 import './BackupControl.css';
 
 /**
@@ -30,41 +31,41 @@ export default function BackupControl({ getStateSnapshot, onRestore }) {
 
   if (!isBackupSupported()) return null;
 
-  const setup = async () => {
+  /** Run an async action with the `busy` flag held for its duration. */
+  const withBusy = async (action) => {
     setBusy(true);
     try {
-      const snap = getStateSnapshot();
-      const res = await chooseBackupFile(JSON.stringify(snap, null, 2));
-      if (res) setFileName(res.name);
+      await action();
     } finally {
       setBusy(false);
     }
   };
 
-  const restore = async () => {
+  // Pick a (new) save location and seed it with the current snapshot.
+  // Used for both first-time setup and "Change backup file".
+  const chooseFile = () => withBusy(async () => {
+    const res = await chooseBackupFile(serializeSnapshot(getStateSnapshot()));
+    if (res) setFileName(res.name);
+  });
+
+  const setup = chooseFile;
+
+  const changeFile = () => {
     setMenuOpen(false);
-    setBusy(true);
-    try {
+    return chooseFile();
+  };
+
+  const restore = () => {
+    setMenuOpen(false);
+    return withBusy(async () => {
       const res = await pickAndReadBackupFile();
-      if (res?.state) {
+      if (res?.invalid) {
+        alert("That file doesn't look like a Bookmark Home backup, so I left everything as it was.");
+      } else if (res?.state) {
         onRestore(res.state);
         setFileName(res.name);
       }
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const changeFile = async () => {
-    setMenuOpen(false);
-    setBusy(true);
-    try {
-      const snap = getStateSnapshot();
-      const res = await chooseBackupFile(JSON.stringify(snap, null, 2));
-      if (res) setFileName(res.name);
-    } finally {
-      setBusy(false);
-    }
+    });
   };
 
   const disconnect = async () => {
