@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   DndContext, DragOverlay, KeyboardSensor, PointerSensor,
   useSensor, useSensors,
@@ -18,6 +18,7 @@ import { writeBackup } from './backup.js';
 import { buildSnapshot, serializeSnapshot, splitSnapshot } from './snapshot.js';
 import { dropBookmark, reorderCategories } from './reorder.js';
 import { hasLinkPayload, trackInternalDrags } from './linkDrop.js';
+import { readClipboardLink } from './clipboardLink.js';
 import { applyZoom, clampZoom } from './zoom.js';
 import { bookmarkLabel, fetchTitle, getDomain, getFaviconUrl } from './metadata.js';
 import {
@@ -132,8 +133,13 @@ export default function App() {
     return id;
   };
 
-  // A link dragged in from the browser's address bar / bookmarks bar.
-  const [dropMessage, setDropMessage] = useState('');
+  // The toast: a short status message, optionally with an Undo for a bookmark
+  // we just added on the user's behalf (link drop, or a copied link).
+  const [toast, setToast] = useState(null); // { text, undoId? }
+  // The last copied link a "+" click turned into a bookmark. Clicking "+" again
+  // with the same link still on the clipboard opens the Add dialog instead, so
+  // adding a second, typed bookmark (or undoing a wrong one) never re-adds it.
+  const lastClipboardUrl = useRef(null);
   useEffect(() => trackInternalDrags(), []);
   useEffect(() => {
     // A link dropped anywhere that is NOT a column would make the browser
@@ -151,20 +157,23 @@ export default function App() {
     };
   }, []);
   useEffect(() => {
-    if (!dropMessage) return undefined;
-    const t = setTimeout(() => setDropMessage(''), 4000);
+    if (!toast) return undefined;
+    // Longer when there is an Undo to reach for.
+    const t = setTimeout(() => setToast(null), toast.undoId ? 8000 : 4000);
     return () => clearTimeout(t);
-  }, [dropMessage]);
+  }, [toast]);
 
-  const addDroppedLink = (categoryId, link) => {
+  // Add a link as a bookmark in a column/container and offer Undo. Used by
+  // link drop and by the copied-link "+" click.
+  const addLinkTo = (categoryId, link) => {
     const name = categoryLabel(categories, categories.find((c) => c.id === categoryId) || {});
     if (!link) {
-      setDropMessage('That is not a web link, so nothing was added. Drag a link from the address bar or bookmarks bar.');
+      setToast({ text: 'That is not a web link, so nothing was added. Drag a link from the address bar or bookmarks bar.' });
       return;
     }
     const title = bookmarkLabel(link);
     const id = addBookmark({ url: link.url, title, favicon: getFaviconUrl(link.url), categoryId });
-    setDropMessage(`Added ${title} (${getDomain(link.url)}) to ${name}.`);
+    setToast({ text: `Added ${title} (${getDomain(link.url)}) to ${name}.`, undoId: id });
     // Same as the Add form: swap in the page's real title when it arrives,
     // unless the user already renamed it in the meantime.
     if (!link.title) {
@@ -239,7 +248,17 @@ export default function App() {
       : `Delete "${cat.name}" and its ${n} bookmark${n === 1 ? '' : 's'}? This cannot be undone.`;
   };
 
-  const openAddBookmarkFor = (categoryId) => {
+  // The "+" button. If a web link was just copied, add it right away (Undo is
+  // on the toast); otherwise, or if the browser will not share the clipboard,
+  // open the Add dialog as before. Must start synchronously inside the click so
+  // the browser counts it as a user gesture.
+  const openAddBookmarkFor = async (categoryId) => {
+    const link = await readClipboardLink();
+    if (link && link.url !== lastClipboardUrl.current) {
+      lastClipboardUrl.current = link.url;
+      addLinkTo(categoryId || topLevel(categories)[0]?.id, link);
+      return;
+    }
     setEditingBookmark(null);
     setBookmarkPopoverAnchor(null);
     setPendingCategoryId(categoryId || null);
@@ -331,7 +350,7 @@ export default function App() {
               categoryHeights={categoryHeights}
               onResizeCategoryHeight={setCategoryHeight}
               onAddContainer={addContainerTo}
-              onDropLink={addDroppedLink}
+              onDropLink={addLinkTo}
               maxContainers={MAX_CONTAINERS_PER_COLUMN}
               categories={categories}
               bookmarksByCategory={bookmarksByCategory}
@@ -393,7 +412,18 @@ export default function App() {
       </div>
 
       {/* Spoken and shown after a link is dropped in from the browser. */}
-      <div className="pf-toast" role="status">{dropMessage}</div>
+      <div className="pf-toast" role="status">
+        {toast?.text}
+        {toast?.undoId && (
+          <button
+            type="button"
+            className="pf-toast__undo"
+            onClick={() => { deleteBookmark(toast.undoId); setToast({ text: 'Removed.' }); }}
+          >
+            Undo
+          </button>
+        )}
+      </div>
 
       <DragOverlay
         className="pf-drag-overlay"

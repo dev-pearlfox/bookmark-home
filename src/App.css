@@ -50,8 +50,27 @@ html, body, #root {
   box-shadow: var(--shadow-lift);
   z-index: 50;
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 .pf-toast:empty { display: none; }
+
+/* The toast ignores the pointer so it never blocks a column, but its Undo
+   button must be clickable. */
+.pf-toast__undo {
+  pointer-events: auto;
+  flex: none;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--pf-mint), var(--pf-sky));
+  box-shadow: var(--shadow-inner);
+  cursor: pointer;
+}
+.pf-toast__undo:hover { box-shadow: var(--shadow-soft), var(--shadow-inner); }
 
 /* dnd-kit positions the floating card from screen-pixel rects, but CSS zoom
    would scale those numbers again (wrong size, offset from the cursor). So the
