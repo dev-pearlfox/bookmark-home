@@ -108,13 +108,6 @@ export default function App() {
     return map;
   }, [bookmarks, categories]);
 
-  // Names shown in the Add-bookmark category picker: containers read
-  // "Work / New group" so identical default names stay distinguishable.
-  const categoryOptions = useMemo(
-    () => categories.map((c) => ({ ...c, name: categoryLabel(categories, c) })),
-    [categories],
-  );
-
   // --- Bookmark mutations ---
   const addBookmark = (payload) => {
     const id = uid('bm'); // outside the updater: updaters must be pure
@@ -365,8 +358,9 @@ export default function App() {
             else addBookmark(payload);
           }}
           onDelete={(id) => deleteBookmark(id)}
-          categories={categoryOptions}
-          defaultCategoryId={pendingCategoryId || undefined}
+          // The category is never asked for: an add comes from a column's "+"
+          // (pendingCategoryId), an edit keeps the bookmark's own.
+          defaultCategoryId={pendingCategoryId || topLevel(categories)[0]?.id}
           initial={editingBookmark}
           anchorRect={bookmarkPopoverAnchor}
         />

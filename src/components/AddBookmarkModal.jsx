@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import Modal from './Modal.jsx';
-import { getIcon } from './iconMap.js';
 import { normalizeUrl, fetchTitle, getFaviconUrl, isSafeHttpUrl, bookmarkLabel } from '../metadata.js';
 
 const emptyForm = { url: '', title: '', categoryId: '' };
@@ -18,7 +17,6 @@ export default function AddBookmarkModal({
   onClose,
   onSubmit,
   onDelete,
-  categories,
   defaultCategoryId,
   initial,
   anchorRect,
@@ -34,12 +32,12 @@ export default function AddBookmarkModal({
       setForm({
         url: initial.url || '',
         title: initial.title || '',
-        categoryId: initial.categoryId || categories[0]?.id || '',
+        categoryId: initial.categoryId || defaultCategoryId || '',
       });
     } else {
-      setForm({ ...emptyForm, categoryId: defaultCategoryId || categories[0]?.id || '' });
+      setForm({ ...emptyForm, categoryId: defaultCategoryId || '' });
     }
-  }, [open, isEdit, initial, defaultCategoryId, categories]);
+  }, [open, isEdit, initial, defaultCategoryId]);
 
   // Debounced auto-fetch — only in CREATE mode. In edit mode we don't want
   // to overwrite the user's carefully curated title on every keystroke.
@@ -89,7 +87,7 @@ export default function AddBookmarkModal({
       title={isEdit ? 'Edit bookmark' : 'Save a bookmark'}
       subtitle={
         isEdit
-          ? 'Change the URL, title, or category.'
+          ? 'Change the URL or the title.'
           : "Paste any link — we'll grab the icon and title for you."
       }
       footer={
@@ -150,27 +148,6 @@ export default function AddBookmarkModal({
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
-        </div>
-
-        <div className="pf-field">
-          <label className="pf-field__label">Category</label>
-          <div className="pf-cat-picker">
-            {categories.map((cat) => {
-              const Icon = getIcon(cat.icon);
-              const active = form.categoryId === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  className={`pf-cat-chip pf-cat--${cat.color} ${active ? 'is-active' : ''}`}
-                  onClick={() => setForm({ ...form, categoryId: cat.id })}
-                >
-                  <Icon size={14} />
-                  {cat.name}
-                </button>
-              );
-            })}
-          </div>
         </div>
 
         {previewUrl && !isEdit && (
