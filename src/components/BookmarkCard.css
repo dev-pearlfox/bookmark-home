@@ -7,11 +7,9 @@
   gap: 8px;
   padding: 12px;
   border-radius: var(--r-md);
-  background: var(--surface-glass);
+  background: var(--surface-panel);
   border: var(--border-glass);
   box-shadow: var(--shadow-soft), var(--shadow-inner);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
   transition: transform var(--dur-fast) var(--ease-out),
               box-shadow var(--dur-fast) var(--ease-out),
               background var(--dur-fast) var(--ease-out);

@@ -23,6 +23,9 @@
 
   /* Surfaces */
   --surface-glass:      rgba(255, 255, 255, 0.55);
+  /* Columns and cards: no backdrop blur (it is re-done every frame over the
+     moving aurora and made scroll/drag choppy), so a touch more white. */
+  --surface-panel:      rgba(255, 255, 255, 0.64);
   --surface-glass-strong: rgba(255, 255, 255, 0.75);
   --surface-frost:      rgba(255, 255, 255, 0.35);
   --surface-hover:      rgba(255, 255, 255, 0.85);
