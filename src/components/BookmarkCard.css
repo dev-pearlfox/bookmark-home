@@ -69,13 +69,15 @@
   min-width: 0;
 }
 
+/* One line, fixed row height. A long title shows as much as fits and is then
+   simply cut off (no "..."); the full text is in the title tooltip. */
 .pf-card__title {
   font-size: 14px;
   font-weight: 600;
   color: var(--ink-900);
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
 }
 
 .pf-card__domain {
