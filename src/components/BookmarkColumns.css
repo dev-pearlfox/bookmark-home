@@ -537,14 +537,17 @@
 .pf-col[data-layout="horizontal"] {
   padding: 18px 12px 12px;   /* top: room for the small drag grip */
   gap: 6px;
-  height: var(--pf-col-default-h);
+  /* The "default height" is a MINIMUM, not a fixed height: with `height: auto`
+     a column or container grows to fit its bookmarks, so its "Add a bookmark"
+     slot is always visible instead of hidden inside a scroll area. */
+  height: auto;
   min-height: var(--pf-col-default-h);
   max-height: none;
   width: 100%;   /* fill the slot which handles all width sizing */
   /* Smooth height changes for reset / programmatic updates. During an
      active drag we set data-resizing="true" to switch this off so each
      mousemove paints instantly (see rule below). */
-  transition: height var(--dur) var(--ease-out);
+  transition: min-height var(--dur) var(--ease-out);
 }
 .pf-col[data-layout="horizontal"][data-resizing="true"] { transition: none; }
 
@@ -556,7 +559,7 @@
    because the column lives inside `.pf-cols__slot-grid`. */
 .pf-cols[data-layout="horizontal"] .pf-cols__slot:nth-child(1) .pf-col[data-layout="horizontal"],
 .pf-cols[data-layout="horizontal"] .pf-cols__slot:nth-child(2) .pf-col[data-layout="horizontal"] {
-  height: var(--pf-col-featured-h);
+  height: auto;
   min-height: var(--pf-col-featured-h);
 }
 

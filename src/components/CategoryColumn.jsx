@@ -89,13 +89,13 @@ export default function CategoryColumn({
     opacity: isDragging ? 0.35 : 1,
     zIndex: isDragging ? 5 : undefined,
     willChange: 'transform',
-    // Individual height override (horizontal/column view only). When set,
-    // the column stops filling the flex row and takes exactly this height.
-    // `minHeight` is overridden inline too, otherwise the CSS min-height
-    // (especially the 700px featured-column floor) would clamp the user
-    // back up when they try to drag SHORTER than the default.
+    // Individual height override (horizontal/column view only), set by the
+    // drag-resize handle. It is a MINIMUM height: the box may be dragged
+    // shorter than the default (this overrides the CSS floor), but it still
+    // grows past it when its bookmarks need the room, so the "Add a bookmark"
+    // slot never ends up hidden.
     ...(!isVertical && typeof height === 'number' && height > 0
-      ? { height: `${height}px`, minHeight: `${height}px`, alignSelf: 'flex-start' }
+      ? { minHeight: `${height}px`, alignSelf: 'flex-start' }
       : {}),
   };
 

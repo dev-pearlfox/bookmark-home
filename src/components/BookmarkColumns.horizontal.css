@@ -88,7 +88,7 @@
    first two slots is not stretched to 600px. An inline height (drag-resize)
    still wins over both. */
 .pf-cols[data-layout="horizontal"] .pf-cols__slot-grid .pf-col.pf-col--container[data-layout="horizontal"] {
-  height: var(--pf-col-container-h);
+  height: auto;  /* grows to fit its bookmarks; see the note on .pf-col above */
   min-height: var(--pf-col-container-h);
   padding-top: 14px; /* no drag grip on containers, so less headroom needed */
 }
