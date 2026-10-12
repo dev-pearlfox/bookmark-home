@@ -94,6 +94,9 @@
 }
 .pf-view-switch:hover { background: var(--surface-hover); transform: translateY(-1px); }
 .pf-view-switch:active { transform: translateY(0); }
+/* Locked to Column View: stays fully readable, but clearly not clickable. */
+.pf-view-switch:disabled { cursor: not-allowed; transform: none; background: var(--surface-frost); }
+.pf-view-switch:disabled .pf-view-switch__side--left { opacity: 0.55; }
 
 .pf-view-switch__side {
   display: inline-flex;

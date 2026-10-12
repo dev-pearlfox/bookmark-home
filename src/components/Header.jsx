@@ -4,23 +4,25 @@ import ZoomControl from './ZoomControl.jsx';
 import './Header.css';
 
 /**
- * Segmented switch for the two view modes. Left = shelves, right = columns.
- * The whole thing is one <button>: clicking anywhere toggles. A sliding
- * thumb inside the middle track indicates the active side, and the active
- * label gets emphasized styling via the parent's data-layout attribute.
+ * The view switch is LOCKED to Column View (owner decision): it is shown, but
+ * disabled, so nobody can flip to Shelf View. It is kept visible (rather than
+ * removed) so the header layout does not change and the lock is obvious.
+ * Unlocking later means passing `layout` and `onToggleLayout` back in and
+ * dropping `disabled`; the Shelf View code in the columns is still there.
  */
-function ViewSwitch({ layout, onToggleLayout }) {
-  const isColumns = layout === 'horizontal';
+const LOCKED_NOTE = 'Column View is fixed';
+
+function ViewSwitch() {
   return (
     <button
       type="button"
       className="pf-view-switch"
-      onClick={onToggleLayout}
+      disabled
       role="switch"
-      aria-checked={isColumns}
-      aria-label={isColumns ? 'Switch to shelves view' : 'Switch to columns view'}
-      title={isColumns ? 'Switch to shelves view' : 'Switch to columns view'}
-      data-layout={layout}
+      aria-checked="true"
+      aria-label={`Column View. ${LOCKED_NOTE}`}
+      title={LOCKED_NOTE}
+      data-layout="horizontal"
     >
       <span className="pf-view-switch__side pf-view-switch__side--left">
         <Rows3 size={14} strokeWidth={2.2} aria-hidden="true" />
@@ -41,8 +43,6 @@ export default function Header({
   bookmarkCount,
   getStateSnapshot,
   onRestore,
-  layout,
-  onToggleLayout,
   zoom,
   onZoomChange,
 }) {
@@ -60,7 +60,7 @@ export default function Header({
 
       <div className="pf-header__actions">
         <ZoomControl zoom={zoom} onChange={onZoomChange} />
-        <ViewSwitch layout={layout} onToggleLayout={onToggleLayout} />
+        <ViewSwitch />
         <BackupControl
           getStateSnapshot={getStateSnapshot}
           onRestore={onRestore}

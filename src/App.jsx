@@ -57,9 +57,8 @@ export default function App() {
   const [categoryPopoverAnchor, setCategoryPopoverAnchor] = useState(null);
   const [activeDragBookmark, setActiveDragBookmark] = useState(null);
   const [activeDragCategory, setActiveDragCategory] = useState(null);
-  // Layout always starts in Column View on load — no persistence. Users
-  // can toggle to Shelves during a session, but a reload resets them.
-  const [layout, setLayout] = useState('horizontal');
+  // The view is locked to Column View (owner decision); see Header's ViewSwitch.
+  const layout = 'horizontal';
 
   // Page zoom (this site only). applyZoom sets the --pf-zoom variable on
   // <html> (main.jsx already did it once before the first render); index.css
@@ -321,8 +320,6 @@ export default function App() {
           bookmarkCount={bookmarks.length}
           getStateSnapshot={getStateSnapshot}
           onRestore={handleRestore}
-          layout={layout}
-          onToggleLayout={() => setLayout((l) => (l === 'vertical' ? 'horizontal' : 'vertical'))}
           zoom={zoom}
           onZoomChange={setZoom}
         />
