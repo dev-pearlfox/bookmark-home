@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   domainToTitle,
   bookmarkLabel,
-  faviconFor,
+  faviconCandidates,
+  GOOGLE_PLACEHOLDER_WIDTH,
   fetchTitle,
   getDomain,
   getFaviconUrl,
@@ -238,17 +239,42 @@ describe('bookmarkLabel', () => {
   });
 });
 
-describe('faviconFor', () => {
+describe('faviconCandidates', () => {
   const stored64 = 'https://www.google.com/s2/favicons?domain=github.com&sz=64';
+  const hostsOf = (b) => faviconCandidates(b).map((c) => decodeURIComponent(c.src.match(/domain=([^&]+)/)[1]));
+
   it('re-requests a stored Google favicon at the bigger size', () => {
-    expect(faviconFor({ favicon: stored64, url: 'https://github.com/x' })).toBe(
+    expect(faviconCandidates({ favicon: stored64, url: 'https://github.com/x' })[0].src).toBe(
       'https://www.google.com/s2/favicons?domain=github.com&sz=128',
     );
   });
-  it('builds one when nothing is stored', () => {
-    expect(faviconFor({ url: 'https://www.wikipedia.org' }, 96)).toContain('domain=wikipedia.org&sz=96');
+  it('builds one when nothing is stored, at the requested size', () => {
+    expect(faviconCandidates({ url: 'https://www.wikipedia.org' }, 96)[0].src).toContain('domain=wikipedia.org&sz=96');
   });
-  it('keeps a custom (non-Google) icon untouched', () => {
-    expect(faviconFor({ favicon: 'https://cdn.example.com/icon.png', url: 'https://example.com' })).toBe('https://cdn.example.com/icon.png');
+  it('keeps a custom (non-Google) icon alone and trusted', () => {
+    expect(faviconCandidates({ favicon: 'https://cdn.example.com/icon.png', url: 'https://example.com' })).toEqual([
+      { src: 'https://cdn.example.com/icon.png', generated: false },
+    ]);
+  });
+  it('falls back to parent domains: console.cloud.google.com -> cloud.google.com -> google.com', () => {
+    expect(hostsOf({ url: 'https://console.cloud.google.com/home' })).toEqual([
+      'console.cloud.google.com', 'cloud.google.com', 'google.com',
+    ]);
+  });
+  it('has no fallback for a plain two-label domain', () => {
+    expect(hostsOf({ url: 'https://github.com' })).toEqual(['github.com']);
+  });
+  it('never offers a bare country suffix like co.uk as a parent', () => {
+    expect(hostsOf({ url: 'https://news.bbc.co.uk' })).toEqual(['news.bbc.co.uk', 'bbc.co.uk']);
+  });
+  it('does not split an IP address into fake parents', () => {
+    expect(hostsOf({ url: 'http://192.168.1.5/admin' })).toEqual(['192.168.1.5']);
+  });
+  it('caps the number of attempts on very deep hostnames', () => {
+    expect(hostsOf({ url: 'https://a.b.c.d.e.f.example.com' }).length).toBe(4);
+  });
+  it('marks Google icons as generated so they get size-checked', () => {
+    expect(faviconCandidates({ url: 'https://example.com' }).every((c) => c.generated)).toBe(true);
+    expect(GOOGLE_PLACEHOLDER_WIDTH).toBe(16);
   });
 });

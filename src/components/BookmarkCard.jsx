@@ -1,7 +1,8 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Pencil } from 'lucide-react';
-import { getDomain, faviconFor, bookmarkLabel } from '../metadata.js';
+import { getDomain, bookmarkLabel } from '../metadata.js';
+import Favicon from './Favicon.jsx';
 import './BookmarkCard.css';
 
 /**
@@ -53,7 +54,6 @@ export default function BookmarkCard({ bookmark, onEdit, dragOverlay = false }) 
 
   const domain = getDomain(bookmark.url);
   const label = bookmarkLabel(bookmark);
-  const favicon = faviconFor(bookmark);
   // Pointer listeners go on the card; ARIA attributes go on the handle only.
   const dragListeners = dragOverlay ? {} : listeners;
 
@@ -71,14 +71,7 @@ export default function BookmarkCard({ bookmark, onEdit, dragOverlay = false }) 
         rel="noopener noreferrer"
       >
         <div className="pf-card__favicon">
-          <img
-            src={favicon}
-            alt=""
-            width={38}
-            height={38}
-            loading="lazy"
-            onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }}
-          />
+          <Favicon key={`${bookmark.url}|${bookmark.favicon}`} bookmark={bookmark} label={label} />
         </div>
         <div className="pf-card__meta">
           <div className="pf-card__title" title={label}>{label}</div>

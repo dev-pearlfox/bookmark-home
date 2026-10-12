@@ -67,6 +67,17 @@
   object-fit: contain;
 }
 
+/* Shown when no real site icon exists: a crisp letter, not a stretched globe. */
+.pf-favicon-tile {
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--pf-mint), var(--pf-sky));
+}
+
 .pf-card__meta {
   flex: 1;
   min-width: 0;

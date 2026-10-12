@@ -90,16 +90,40 @@ const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
 
 const GOOGLE_FAVICON_PREFIX = 'https://www.google.com/s2/favicons?';
 
+/** Google's stand-in when it has no icon: a 16px grey globe (served with HTTP 404, but
+ *  browsers still draw it, so an <img> onError never fires). Real icons are wider. */
+export const GOOGLE_PLACEHOLDER_WIDTH = 16;
+
+const PUBLIC_SUFFIX_LIKE = /^(co|com|org|net|gov|edu|ac)\.[a-z]{2}$/i;
+const MAX_ICON_CANDIDATES = 4;
+
 /**
- * The icon URL to display for a bookmark, at `size` px. Saved bookmarks store
- * a Google favicon URL at 64px; shown big that is soft, so a stored URL that
- * WE generated is re-requested at the larger size (the same domain-only call,
- * and Google returns the site's real large icon when it has one). Anything
- * else stored (a custom icon) is kept as is.
+ * The icons to try, best first, for a bookmark. Each is `{ src, generated }`;
+ * `generated` means a Google icon URL, which may secretly be the grey
+ * placeholder and so must be size-checked by the caller. A custom saved icon
+ * is returned alone and trusted.
+ *
+ * Google only knows some hostnames: console.cloud.google.com has no icon, but
+ * cloud.google.com and google.com do. So after the full host we try each
+ * parent domain (never a bare TLD, a bare IP, or a co.uk style suffix).
  */
-export function faviconFor({ favicon, url } = {}, size = 128) {
-  if (favicon && !favicon.startsWith(GOOGLE_FAVICON_PREFIX)) return favicon;
-  return getFaviconUrl(url, size);
+export function faviconCandidates({ favicon, url } = {}, size = 128) {
+  if (favicon && !favicon.startsWith(GOOGLE_FAVICON_PREFIX)) {
+    return [{ src: favicon, generated: false }];
+  }
+  const host = getDomain(url);
+  const labels = host.split('.');
+  const hosts = [host];
+  if (!IPV4.test(host) && labels.length > 2) {
+    for (let i = 1; i <= labels.length - 2; i++) {
+      const parent = labels.slice(i).join('.');
+      if (!PUBLIC_SUFFIX_LIKE.test(parent)) hosts.push(parent);
+    }
+  }
+  return hosts.slice(0, MAX_ICON_CANDIDATES).map((h) => ({
+    src: `https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=${size}`,
+    generated: true,
+  }));
 }
 
 /** Prettify a domain into a plausible title as a fallback. */
