@@ -18,7 +18,7 @@ import { writeBackup } from './backup.js';
 import { buildSnapshot, serializeSnapshot, splitSnapshot } from './snapshot.js';
 import { dropBookmark, reorderCategories } from './reorder.js';
 import { hasLinkPayload, trackInternalDrags } from './linkDrop.js';
-import { clampZoom } from './zoom.js';
+import { applyZoom, clampZoom } from './zoom.js';
 import { bookmarkLabel, fetchTitle, getDomain, getFaviconUrl } from './metadata.js';
 import {
   MAX_CONTAINERS_PER_COLUMN, addContainer, categoryLabel, deleteColumn, deleteContainer,
@@ -61,11 +61,12 @@ export default function App() {
   // can toggle to Shelves during a session, but a reload resets them.
   const [layout, setLayout] = useState('horizontal');
 
-  // Page zoom (this site only). Applied as the --pf-zoom variable on <html>;
-  // index.css turns it into CSS `zoom`. Saved so it survives reloads.
+  // Page zoom (this site only). applyZoom sets the --pf-zoom variable on
+  // <html> (main.jsx already did it once before the first render); index.css
+  // turns it into CSS `zoom`. Saved so it survives reloads.
   const [zoom, setZoom] = useState(() => clampZoom(loadZoom()));
   useEffect(() => {
-    document.documentElement.style.setProperty('--pf-zoom', String(zoom / 100));
+    applyZoom(zoom);
     saveZoom(zoom);
   }, [zoom]);
   // Per-category custom heights (column view only), keyed by category id —

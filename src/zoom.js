@@ -1,18 +1,19 @@
 /**
  * Page zoom: pure rules (no DOM). The slider and the +/- buttons all go
  * through these so the range and step are defined in exactly one place.
- * Values are whole percentages (100 = normal).
+ * Values are whole percentages (100 = the browser's normal size). The app
+ * starts at ZOOM_DEFAULT, which is deliberately a bit smaller than 100.
  */
 
 export const ZOOM_MIN = 70;
 export const ZOOM_MAX = 200;
 export const ZOOM_STEP = 10;
-export const ZOOM_DEFAULT = 100;
+export const ZOOM_DEFAULT = 90;
 
 /** Anything (a saved string, a slider value, garbage) -> a valid zoom step. */
 export function clampZoom(value) {
   // Only numbers and non-blank strings count. Number(null), Number([]) and
-  // Number('') are all 0, which would clamp to the minimum instead of 100.
+  // Number('') are all 0, which would clamp to the minimum instead of the default.
   const isNumeric = typeof value === 'number' || (typeof value === 'string' && value.trim() !== '');
   const n = isNumeric ? Number(value) : NaN;
   if (!Number.isFinite(n)) return ZOOM_DEFAULT;
@@ -40,4 +41,14 @@ export function readZoomFactor(root = typeof document !== 'undefined' ? document
   const n = Number.parseFloat(raw);
   if (!Number.isFinite(n)) return 1;
   return Math.min(ZOOM_MAX / 100, Math.max(ZOOM_MIN / 100, n));
+}
+
+/**
+ * Make `percent` the page zoom: sets the --pf-zoom variable that index.css
+ * turns into CSS `zoom`. Called once before the first render (main.jsx), so
+ * the page never paints at the wrong size and then jumps, and again whenever
+ * the user changes the zoom. `root` is injectable for tests.
+ */
+export function applyZoom(percent, root = typeof document !== 'undefined' ? document.documentElement : null) {
+  root?.style?.setProperty?.('--pf-zoom', String(clampZoom(percent) / 100));
 }

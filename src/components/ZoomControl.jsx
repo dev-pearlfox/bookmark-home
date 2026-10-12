@@ -7,7 +7,7 @@ import './ZoomControl.css';
 /**
  * [ - ]  ----o------  [ + ]  125%
  * Page zoom for this site only. The % is a button: click it to go back to
- * 100%. The slider is a native range input, so arrow keys, Home and End
+ * the default. The slider is a native range input, so arrow keys, Home and End
  * already work with no extra code.
  */
 export default function ZoomControl({ zoom, onChange }) {
@@ -50,7 +50,7 @@ export default function ZoomControl({ zoom, onChange }) {
         onClick={() => onChange(ZOOM_DEFAULT)}
         disabled={zoom === ZOOM_DEFAULT}
         aria-label={`Zoom ${zoom} percent. Reset to ${ZOOM_DEFAULT} percent`}
-        title="Reset zoom to 100%"
+        title={`Reset zoom to ${ZOOM_DEFAULT}%`}
       >
         {zoom}%
       </button>
