@@ -18,6 +18,7 @@ export default function BookmarkColumns({
   categoryHeights = {},
   onResizeCategoryHeight,
   onAddContainer,
+  onDropLink,
   maxContainers = 19,
   categories,
   bookmarksByCategory,
@@ -45,6 +46,7 @@ export default function BookmarkColumns({
       onAddToCategory={onAddToCategory}
       onEditBookmark={onEditBookmark}
       onEditCategory={onEditCategory}
+      onDropLink={onDropLink}
       onResizeHeight={
         isColumnView && onResizeCategoryHeight
           ? (h) => onResizeCategoryHeight(cat.id, h)

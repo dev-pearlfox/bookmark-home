@@ -17,6 +17,8 @@ import { loadState, saveState } from './storage.js';
 import { writeBackup } from './backup.js';
 import { buildSnapshot, serializeSnapshot, splitSnapshot } from './snapshot.js';
 import { dropBookmark, reorderCategories } from './reorder.js';
+import { hasLinkPayload, trackInternalDrags } from './linkDrop.js';
+import { bookmarkLabel, fetchTitle, getDomain, getFaviconUrl } from './metadata.js';
 import {
   MAX_CONTAINERS_PER_COLUMN, addContainer, categoryLabel, deleteColumn, deleteContainer,
   ensureContainers, topLevel,
@@ -115,15 +117,63 @@ export default function App() {
 
   // --- Bookmark mutations ---
   const addBookmark = (payload) => {
+    const id = uid('bm'); // outside the updater: updaters must be pure
     // Append to the end so the newest bookmark shows up at the bottom of
     // its column (right above the + slot, which visually "goes down").
     setState((s) => ({
       ...s,
       bookmarks: [
         ...s.bookmarks,
-        { id: uid('bm'), createdAt: Date.now(), ...payload },
+        { id, createdAt: Date.now(), ...payload },
       ],
     }));
+    return id;
+  };
+
+  // A link dragged in from the browser's address bar / bookmarks bar.
+  const [dropMessage, setDropMessage] = useState('');
+  useEffect(() => trackInternalDrags(), []);
+  useEffect(() => {
+    // A link dropped anywhere that is NOT a column would make the browser
+    // navigate this tab away to it. Refuse those drops instead.
+    const refuse = (e) => {
+      if (e.defaultPrevented || !hasLinkPayload(e.dataTransfer)) return;
+      e.preventDefault();
+      if (e.type === 'dragover') e.dataTransfer.dropEffect = 'none';
+    };
+    window.addEventListener('dragover', refuse);
+    window.addEventListener('drop', refuse);
+    return () => {
+      window.removeEventListener('dragover', refuse);
+      window.removeEventListener('drop', refuse);
+    };
+  }, []);
+  useEffect(() => {
+    if (!dropMessage) return undefined;
+    const t = setTimeout(() => setDropMessage(''), 4000);
+    return () => clearTimeout(t);
+  }, [dropMessage]);
+
+  const addDroppedLink = (categoryId, link) => {
+    const name = categoryLabel(categories, categories.find((c) => c.id === categoryId) || {});
+    if (!link) {
+      setDropMessage('That is not a web link, so nothing was added. Drag a link from the address bar or bookmarks bar.');
+      return;
+    }
+    const title = bookmarkLabel(link);
+    const id = addBookmark({ url: link.url, title, favicon: getFaviconUrl(link.url), categoryId });
+    setDropMessage(`Added ${title} (${getDomain(link.url)}) to ${name}.`);
+    // Same as the Add form: swap in the page's real title when it arrives,
+    // unless the user already renamed it in the meantime.
+    if (!link.title) {
+      fetchTitle(link.url).then((real) => {
+        if (!real || real === title) return;
+        setState((s) => ({
+          ...s,
+          bookmarks: s.bookmarks.map((b) => (b.id === id && b.title === title ? { ...b, title: real } : b)),
+        }));
+      });
+    }
   };
 
   const updateBookmark = (id, payload) => {
@@ -279,6 +329,7 @@ export default function App() {
               categoryHeights={categoryHeights}
               onResizeCategoryHeight={setCategoryHeight}
               onAddContainer={addContainerTo}
+              onDropLink={addDroppedLink}
               maxContainers={MAX_CONTAINERS_PER_COLUMN}
               categories={categories}
               bookmarksByCategory={bookmarksByCategory}
@@ -337,6 +388,9 @@ export default function App() {
           anchorRect={categoryPopoverAnchor}
         />
       </div>
+
+      {/* Spoken and shown after a link is dropped in from the browser. */}
+      <div className="pf-toast" role="status">{dropMessage}</div>
 
       <DragOverlay
         dropAnimation={{ duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }}

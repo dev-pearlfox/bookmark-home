@@ -5,6 +5,7 @@ import { Plus, Pencil, GripVertical, GripHorizontal, ChevronsUpDown, X } from 'l
 import BookmarkCard from './BookmarkCard.jsx';
 import { getIcon } from './iconMap.js';
 import { useDragResize } from './useDragResize.js';
+import { useLinkDrop } from './useLinkDrop.js';
 import { openAll, describeOpenResult } from '../openAll.js';
 
 /**
@@ -26,6 +27,7 @@ export default function CategoryColumn({
   onEditBookmark,
   onEditCategory,
   onResizeHeight,
+  onDropLink,
 }) {
   const isVertical = layout === 'vertical';
   // Bookmarks strategy is the *opposite* orientation from the outer
@@ -57,6 +59,9 @@ export default function CategoryColumn({
     setOpenNotice('');
     openAllRef.current?.focus(); // the dismiss button is about to disappear
   };
+
+  // A link dragged in from the browser (address bar etc.) adds a bookmark here.
+  const { isLinkOver, handlers: linkDropHandlers } = useLinkDrop((link) => onDropLink?.(category.id, link));
 
   const Icon = getIcon(category.icon);
   const {
@@ -101,11 +106,12 @@ export default function CategoryColumn({
       data-layout={layout}
       data-resize-target=""
       data-resizing={isResizing || undefined}
+      {...linkDropHandlers}
       className={[
         'pf-col',
         isContainer ? 'pf-col--container' : '',
         `pf-col--${category.color || 'lilac'}`,
-        isOver ? 'is-over' : '',
+        isOver || isLinkOver ? 'is-over' : '',
         isDragging ? 'is-dragging' : '',
       ].join(' ')}
     >
