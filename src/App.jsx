@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
 
 import Header from './components/Header.jsx';
 import BookmarkColumns from './components/BookmarkColumns.jsx';
@@ -14,6 +13,7 @@ import { DEFAULT_CATEGORIES, SAMPLE_BOOKMARKS } from './defaultData.js';
 import { loadState, saveState } from './storage.js';
 import { writeBackup } from './backup.js';
 import { buildSnapshot, serializeSnapshot, splitSnapshot } from './snapshot.js';
+import { dropBookmark, reorderCategories } from './reorder.js';
 
 import './App.css';
 
@@ -149,47 +149,9 @@ export default function App() {
     setState((s) => ({ ...s, bookmarks: s.bookmarks.filter((b) => b.id !== id) }));
   };
 
-  /**
-   * Move / reorder a bookmark based on where it was dropped.
-   *  - Dropped on another bookmark: insert at that bookmark's position.
-   *    If categories differ, the moved bookmark also switches category.
-   *  - Dropped on a category (empty area of the column): append to that
-   *    category's group.
-   */
+  // Drag-drop reordering lives in reorder.js (pure + unit-tested).
   const handleBookmarkDrop = (activeBookmarkId, overData) => {
-    if (!overData) return;
-    setState((s) => {
-      const bookmarks = [...s.bookmarks];
-      const srcIdx = bookmarks.findIndex((b) => b.id === activeBookmarkId);
-      if (srcIdx === -1) return s;
-
-      if (overData.type === 'bookmark') {
-        const dstIdx = bookmarks.findIndex((b) => b.id === overData.bookmarkId);
-        if (dstIdx === -1 || dstIdx === srcIdx) return s;
-        const targetCategoryId = bookmarks[dstIdx].categoryId;
-        if (bookmarks[srcIdx].categoryId !== targetCategoryId) {
-          bookmarks[srcIdx] = { ...bookmarks[srcIdx], categoryId: targetCategoryId };
-        }
-        return { ...s, bookmarks: arrayMove(bookmarks, srcIdx, dstIdx) };
-      }
-
-      if (overData.type === 'category') {
-        const targetCategoryId = overData.categoryId;
-        if (!targetCategoryId || targetCategoryId === 'all') return s;
-        // Move source to the end of the target category's group
-        if (bookmarks[srcIdx].categoryId !== targetCategoryId) {
-          bookmarks[srcIdx] = { ...bookmarks[srcIdx], categoryId: targetCategoryId };
-        }
-        let lastIdx = -1;
-        for (let i = 0; i < bookmarks.length; i++) {
-          if (bookmarks[i].categoryId === targetCategoryId) lastIdx = i;
-        }
-        if (lastIdx === -1 || lastIdx === srcIdx) return { ...s, bookmarks };
-        return { ...s, bookmarks: arrayMove(bookmarks, srcIdx, lastIdx) };
-      }
-
-      return s;
-    });
+    setState((s) => dropBookmark(s, activeBookmarkId, overData));
   };
 
   // --- Category mutations ---
@@ -255,14 +217,8 @@ export default function App() {
     }
   };
 
-  const reorderCategories = (activeId, overId) => {
-    if (!activeId || !overId || activeId === overId) return;
-    setState((s) => {
-      const oldIndex = s.categories.findIndex((c) => c.id === activeId);
-      const newIndex = s.categories.findIndex((c) => c.id === overId);
-      if (oldIndex === -1 || newIndex === -1) return s;
-      return { ...s, categories: arrayMove(s.categories, oldIndex, newIndex) };
-    });
+  const handleCategoryReorder = (activeId, overId) => {
+    setState((s) => reorderCategories(s, activeId, overId));
   };
 
   const handleDragEnd = (event) => {
@@ -276,7 +232,7 @@ export default function App() {
 
     // Case 1: category reorder — both active and over are categories
     if (activeType === 'category' && overType === 'category') {
-      reorderCategories(active.data.current.categoryId, over.data.current.categoryId);
+      handleCategoryReorder(active.data.current.categoryId, over.data.current.categoryId);
       return;
     }
 

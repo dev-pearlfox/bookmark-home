@@ -26,13 +26,18 @@ npm run dev     # local dev server with HMR
 npm run build   # production build into dist/
 npm run preview # serve the production build locally
 npm run lint    # oxlint
+npm test        # unit tests (Vitest); `npm run test:watch` while developing
 ```
+
+Every pull request must pass lint, tests, build and `npm audit` (see
+`.github/workflows/ci.yml`); a push to `main` only deploys if lint and tests pass.
 
 ## Project layout
 
 ```
 src/
 ├─ App.jsx          state + mutations + drag-and-drop wiring
+├─ reorder.js       pure drag-drop reordering logic (unit-tested)
 ├─ storage.js       the ONLY place that touches localStorage
 ├─ snapshot.js      validation + backup payload (state + layout sizes)
 ├─ backup.js        File System Access API + IndexedDB auto-backup
