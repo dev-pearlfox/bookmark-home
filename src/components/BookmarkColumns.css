@@ -315,8 +315,6 @@
   border-radius: 12px;
   scroll-snap-align: start;
 }
-.pf-col__body .pf-card__favicon { width: 30px; height: 30px; border-radius: 9px; }
-.pf-col__body .pf-card__favicon img { width: 20px; height: 20px; }
 
 /* Inline "next-slot" plus tile — sits at the END of the horizontal shelf */
 .pf-col__slot {

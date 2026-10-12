@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   domainToTitle,
   bookmarkLabel,
+  faviconFor,
   fetchTitle,
   getDomain,
   getFaviconUrl,
@@ -234,5 +235,20 @@ describe('bookmarkLabel', () => {
     expect(bookmarkLabel({ title: '', url: '' })).toBe('');
     expect(bookmarkLabel()).toBe('');
     expect(bookmarkLabel({ title: 'Only title', url: '' })).toBe('Only title');
+  });
+});
+
+describe('faviconFor', () => {
+  const stored64 = 'https://www.google.com/s2/favicons?domain=github.com&sz=64';
+  it('re-requests a stored Google favicon at the bigger size', () => {
+    expect(faviconFor({ favicon: stored64, url: 'https://github.com/x' })).toBe(
+      'https://www.google.com/s2/favicons?domain=github.com&sz=128',
+    );
+  });
+  it('builds one when nothing is stored', () => {
+    expect(faviconFor({ url: 'https://www.wikipedia.org' }, 96)).toContain('domain=wikipedia.org&sz=96');
+  });
+  it('keeps a custom (non-Google) icon untouched', () => {
+    expect(faviconFor({ favicon: 'https://cdn.example.com/icon.png', url: 'https://example.com' })).toBe('https://cdn.example.com/icon.png');
   });
 });

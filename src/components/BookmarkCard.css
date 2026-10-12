@@ -46,9 +46,12 @@
   cursor: inherit;
 }
 
+/* The icon is as big as the card allows. 47px is the card's content height
+   in a column (set by the two stacked action chips), so the row stays 61px.
+   The tile is just a thin frame around a 38px icon. */
 .pf-card__favicon {
-  width: 44px;
-  height: 44px;
+  width: 47px;
+  height: 47px;
   border-radius: 12px;
   display: grid;
   place-items: center;
@@ -59,8 +62,8 @@
 }
 
 .pf-card__favicon img {
-  width: 28px;
-  height: 28px;
+  width: 38px;
+  height: 38px;
   object-fit: contain;
 }
 

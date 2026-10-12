@@ -88,6 +88,20 @@ export function isPrivateHost(url) {
 const SECOND_LEVEL_TLD = /\.(co|com|org|net|gov|edu|ac)\.[a-z]{2}$/i;
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
 
+const GOOGLE_FAVICON_PREFIX = 'https://www.google.com/s2/favicons?';
+
+/**
+ * The icon URL to display for a bookmark, at `size` px. Saved bookmarks store
+ * a Google favicon URL at 64px; shown big that is soft, so a stored URL that
+ * WE generated is re-requested at the larger size (the same domain-only call,
+ * and Google returns the site's real large icon when it has one). Anything
+ * else stored (a custom icon) is kept as is.
+ */
+export function faviconFor({ favicon, url } = {}, size = 128) {
+  if (favicon && !favicon.startsWith(GOOGLE_FAVICON_PREFIX)) return favicon;
+  return getFaviconUrl(url, size);
+}
+
 /** Prettify a domain into a plausible title as a fallback. */
 export function domainToTitle(url) {
   const domain = getDomain(url);
