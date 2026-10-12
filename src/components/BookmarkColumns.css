@@ -563,3 +563,18 @@
   min-height: var(--pf-col-featured-h);
 }
 
+
+/* Touch screens: grow the tap area of the small column handles without
+   changing how they look. The ::after is an invisible, larger hit zone. */
+@media (hover: none), (pointer: coarse) {
+  .pf-col__grip::after {
+    content: '';
+    position: absolute;
+    inset: -8px -12px -4px;
+  }
+  .pf-col__resize::after {
+    content: '';
+    position: absolute;
+    inset: -8px -8px -4px;
+  }
+}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  DndContext, DragOverlay, KeyboardSensor, PointerSensor,
+  DndContext, DragOverlay, KeyboardSensor, MouseSensor, TouchSensor,
   useSensor, useSensors,
 } from '@dnd-kit/core';
 
@@ -19,6 +19,7 @@ import { buildSnapshot, serializeSnapshot, splitSnapshot } from './snapshot.js';
 import { dropBookmark, reorderCategories } from './reorder.js';
 import { hasLinkPayload, trackInternalDrags } from './linkDrop.js';
 import { readClipboardLink } from './clipboardLink.js';
+import { swallowClickAfterTouchDrag } from './swallowClick.js';
 import { applyZoom, clampZoom } from './zoom.js';
 import { bookmarkLabel, fetchTitle, getDomain, getFaviconUrl } from './metadata.js';
 import {
@@ -273,7 +274,13 @@ export default function App() {
 
   // --- DnD wiring ---
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    // Mouse: a drag starts after 4px of movement, so a plain click still
+    // opens the link.
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    // Touch: a drag needs a short press-and-hold. A quick swipe that starts on
+    // a card is then a normal scroll instead of grabbing the card. Moving more
+    // than 8px during the hold means "scroll", and cancels the drag.
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
     // Keyboard drag-and-drop (WCAG 2.1.1): Space/Enter on a drag handle, arrow
     // keys to move, Space/Enter to drop, Escape to cancel.
     useSensor(KeyboardSensor, { coordinateGetter: keyboardCoordinates }),
@@ -306,6 +313,8 @@ export default function App() {
   const handleDragEnd = (event) => {
     setActiveDragBookmark(null);
     setActiveDragCategory(null);
+    // Letting go after a touch drag must not also open the link under the finger.
+    swallowClickAfterTouchDrag(event.activatorEvent);
     const { active, over } = event;
     if (!over) return;
 
@@ -332,7 +341,11 @@ export default function App() {
       collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onDragCancel={() => { setActiveDragBookmark(null); setActiveDragCategory(null); }}
+      onDragCancel={(event) => {
+        setActiveDragBookmark(null);
+        setActiveDragCategory(null);
+        swallowClickAfterTouchDrag(event.activatorEvent);
+      }}
     >
       <div className="pf-app">
         <Header

@@ -16,8 +16,11 @@
               box-shadow var(--dur-fast) var(--ease-out),
               background var(--dur-fast) var(--ease-out);
   cursor: grab;
-  touch-action: none; /* let @dnd-kit own the pointer on touch */
+  /* Touch can still scroll (pan) and pinch from a card. A drag on touch only
+     starts after a press-and-hold (TouchSensor in App.jsx). */
+  touch-action: manipulation;
   user-select: none;
+  -webkit-touch-callout: none; /* no iOS link preview on the press-and-hold */
 }
 
 .pf-card:hover {
@@ -159,4 +162,25 @@
   color: #b23;
   background: rgba(255, 200, 210, 0.75);
   border-color: transparent;
+}
+
+/* Touch screens (no hover, or a finger as the main pointer).
+   - The edit button is always visible: there is no hover to reveal it.
+   - It is 40px, a comfortable tap target.
+   - The reorder handle is hidden: press-and-hold on the card drags instead.
+     It stays in the page for keyboard and screen-reader users, and shows again
+     when it has keyboard focus. */
+@media (hover: none), (pointer: coarse) {
+  .pf-card__actions { opacity: 1; justify-content: center; }
+  .pf-card__action--edit { width: 40px; height: 40px; border-radius: 12px; }
+  .pf-card__action--edit svg { width: 18px; height: 18px; }
+  .pf-card__action--handle:not(:focus-visible) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    opacity: 0;
+    pointer-events: none;
+  }
 }

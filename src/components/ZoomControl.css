@@ -49,3 +49,15 @@
 @media (max-width: 1000px) {
   .pf-zoom__slider { width: 64px; }
 }
+
+/* Touch screens: bigger tap targets (about 34px buttons, 44px bar), while
+   keeping the whole control narrow enough that the header stays on one row on
+   a tablet. This block must stay after the max-width rule above: both have the
+   same specificity, so the later one wins. */
+@media (hover: none), (pointer: coarse) {
+  .pf-zoom { height: 44px; padding: 0 8px; }
+  .pf-zoom__btn { width: 34px; height: 34px; }
+  .pf-zoom__btn svg { width: 18px; height: 18px; }
+  .pf-zoom__slider { width: 48px; height: 34px; }
+  .pf-zoom__value { min-width: 46px; min-height: 34px; font-size: 13.5px; }
+}
