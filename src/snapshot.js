@@ -1,7 +1,7 @@
 /**
  * Snapshot = everything worth backing up:
  *
- *   { categories, bookmarks, layout: { colHeights, secondaryHeights, containerGrid } }
+ *   { categories, bookmarks, layout: { colHeights } }
  *
  * `categories` + `bookmarks` are the app state (persisted to localStorage by
  * storage.js). `layout` carries the per-category sizing maps, which live in

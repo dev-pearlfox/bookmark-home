@@ -10,7 +10,7 @@ const { collisionDetection, keyboardCoordinates } = await import('./dndCollision
 const rect = (left, top, width, height) => ({
   left, top, width, height, right: left + width, bottom: top + height,
 });
-const droppable = (id, type, categoryId) => ({ id, data: { current: { type, categoryId } } });
+const droppable = (id, type, categoryId, container) => ({ id, data: { current: { type, categoryId, container } } });
 const active = (type, categoryId) => ({ data: { current: { type, categoryId } } });
 
 describe('collisionDetection', () => {
@@ -130,5 +130,48 @@ describe('keyboardCoordinates', () => {
     const [, passedArgs] = sortableKeyboardCoordinates.mock.calls[0];
     expect(passedArgs.context.collisionRect).toBe(args.context.collisionRect);
     expect(passedArgs.context.active).toBe(args.context.active);
+  });
+});
+
+describe('containers (categories stacked under a column)', () => {
+  const column = droppable('col-A', 'category', 'A');
+  const container = droppable('col-grp-A', 'category', 'grp-A', true);
+  const rects = new Map([
+    ['col-A', rect(0, 0, 300, 360)],
+    ['col-grp-A', rect(0, 372, 300, 260)],
+  ]);
+
+  it('a dragged COLUMN never collides with a container, even when it is closest', () => {
+    const result = collisionDetection({
+      active: active('category', 'B'),
+      droppableRects: rects,
+      droppableContainers: [column, container],
+      collisionRect: rect(0, 380, 300, 100), // right on top of the container
+      pointerCoordinates: { x: 10, y: 400 },
+    });
+    expect(result.map((r) => r.id)).toEqual(['col-A']);
+  });
+
+  it('a dragged BOOKMARK can still land on a container', () => {
+    const result = collisionDetection({
+      active: active('bookmark', 'A'),
+      droppableRects: rects,
+      droppableContainers: [column, container],
+      collisionRect: rect(0, 380, 300, 100),
+      pointerCoordinates: { x: 10, y: 400 },
+    });
+    expect(result[0].id).toBe('col-grp-A');
+  });
+
+  it('keyboard: a dragged column cannot stop on a container; a bookmark can', () => {
+    const items = [column, container, droppable('bm-1', 'bookmark', 'A')];
+    const context = (a) => ({ active: a, droppableContainers: { getEnabled: () => items, get: () => undefined } });
+    keyboardCoordinates({}, { context: context(active('category', 'B')) });
+    const forColumn = sortableKeyboardCoordinates.mock.calls.at(-1)[1].context.droppableContainers.getEnabled();
+    expect(forColumn.map((d) => d.id)).toEqual(['col-A']);
+
+    keyboardCoordinates({}, { context: context(active('bookmark', 'zzz')) });
+    const forBookmark = sortableKeyboardCoordinates.mock.calls.at(-1)[1].context.droppableContainers.getEnabled();
+    expect(forBookmark.map((d) => d.id)).toEqual(['col-A', 'col-grp-A', 'bm-1']);
   });
 });

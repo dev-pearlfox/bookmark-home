@@ -17,6 +17,10 @@ import { loadState, saveState } from './storage.js';
 import { writeBackup } from './backup.js';
 import { buildSnapshot, serializeSnapshot, splitSnapshot } from './snapshot.js';
 import { dropBookmark, reorderCategories } from './reorder.js';
+import {
+  MAX_CONTAINERS_PER_COLUMN, addContainer, categoryLabel, deleteColumn, deleteContainer,
+  ensureContainers, topLevel,
+} from './containers.js';
 import { SCREEN_READER_INSTRUCTIONS, createAnnouncements } from './dndAnnouncements.js';
 import { collisionDetection, keyboardCoordinates } from './dndCollision.js';
 
@@ -26,14 +30,6 @@ const uid = (prefix = 'id') =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 const COL_HEIGHTS_KEY = 'pf.bookmarkHome.colHeights.v2';
-const SECONDARY_HEIGHTS_KEY = 'pf.bookmarkHome.secondaryHeights.v1';
-const CONTAINER_GRID_KEY = 'pf.bookmarkHome.containerGrid.v1';
-
-/* Cap on the per-slot container stack. Primary + secondary are the two
-   base rows; users can add extras below via the "+ Add below" button up
-   to this total. Horizontal growth (side-by-side sub-columns) is
-   intentionally disabled — the app grows only downward. */
-const MAX_ROWS_PER_SUBCOL = 20;
 
 function seedState() {
   return {
@@ -46,7 +42,9 @@ export default function App() {
   // Array position IS the display order (drag-and-drop reorders the array and
   // saveState persists it), so loaded bookmarks must NOT be re-sorted here —
   // an earlier createdAt sort silently undid every reorder on reload.
-  const [state, setState] = useState(() => loadState() || seedState());
+  // ensureContainers gives every column its starting container (and fixes
+  // links in old saves / restored backups); it is a no-op once they exist.
+  const [state, setState] = useState(() => ensureContainers(loadState() || seedState()));
   const [isAddBookmarkOpen, setAddBookmarkOpen] = useState(false);
   const [pendingCategoryId, setPendingCategoryId] = useState(null); // pre-select cat for add-modal
   const [editingBookmark, setEditingBookmark] = useState(null);
@@ -59,22 +57,9 @@ export default function App() {
   // Layout always starts in Column View on load — no persistence. Users
   // can toggle to Shelves during a session, but a reload resets them.
   const [layout, setLayout] = useState('horizontal');
-  // Per-category custom heights (horizontal/column view only). Missing
-  // entries → container uses the CSS default. Two parallel maps: one for
-  // the primary column, one for the secondary container beneath it.
+  // Per-category custom heights (column view only), keyed by category id —
+  // columns and containers alike. Missing entry → the CSS default.
   const [categoryHeights, setCategoryHeight, replaceCategoryHeights] = useHeightsMap(COL_HEIGHTS_KEY);
-  const [secondaryHeights, setSecondaryHeight, replaceSecondaryHeights] = useHeightsMap(SECONDARY_HEIGHTS_KEY);
-
-  /* Per-category mini-grid of extra containers beyond primary+secondary.
-     Missing entry ⇒ {rows: 0} ⇒ the default 1×2 layout. */
-  const [containerGrid, setContainerGridEntry, replaceContainerGrid] = useHeightsMap(CONTAINER_GRID_KEY);
-
-  const growContainerGrid = useCallback((categoryId) => {
-    if (!categoryId) return;
-    const rows = containerGrid[categoryId]?.rows || 0;
-    if (rows >= MAX_ROWS_PER_SUBCOL - 2) return;
-    setContainerGridEntry(categoryId, { rows: rows + 1 });
-  }, [containerGrid, setContainerGridEntry]);
 
   // Persist state — localStorage is the fast primary cache; the optional
   // backup file (below) is the durable copy that survives a site-data wipe.
@@ -82,12 +67,8 @@ export default function App() {
 
   // Everything a backup needs: app state + the per-category sizing maps.
   const snapshot = useMemo(
-    () => buildSnapshot(state, {
-      colHeights: categoryHeights,
-      secondaryHeights,
-      containerGrid,
-    }),
-    [state, categoryHeights, secondaryHeights, containerGrid],
+    () => buildSnapshot(state, { colHeights: categoryHeights }),
+    [state, categoryHeights],
   );
 
   // Debounced backup writer — coalesces rapid changes into one write.
@@ -100,16 +81,16 @@ export default function App() {
   const handleRestore = useCallback((raw) => {
     const parsed = splitSnapshot(raw);
     if (!parsed) return; // backup.js already rejects bad files; this is the safety net
-    setState(parsed.state);
+    setState(ensureContainers(parsed.state));
     if (parsed.dropped) {
       alert(`Restored, but skipped ${parsed.dropped} bookmark(s) with unsafe links (only http/https are allowed).`);
     }
     // Layout maps are optional (older backups predate them) — replaceAll
     // ignores undefined, leaving current sizes untouched in that case.
+    // (Old backups may also carry secondaryHeights / containerGrid from the
+    // placeholder-container era; they are simply ignored.)
     replaceCategoryHeights(parsed.layout.colHeights);
-    replaceSecondaryHeights(parsed.layout.secondaryHeights);
-    replaceContainerGrid(parsed.layout.containerGrid);
-  }, [replaceCategoryHeights, replaceSecondaryHeights, replaceContainerGrid]);
+  }, [replaceCategoryHeights]);
 
   const { categories, bookmarks } = state;
 
@@ -124,6 +105,13 @@ export default function App() {
     // per-category order field.
     return map;
   }, [bookmarks, categories]);
+
+  // Names shown in the Add-bookmark category picker: containers read
+  // "Work / New group" so identical default names stay distinguishable.
+  const categoryOptions = useMemo(
+    () => categories.map((c) => ({ ...c, name: categoryLabel(categories, c) })),
+    [categories],
+  );
 
   // --- Bookmark mutations ---
   const addBookmark = (payload) => {
@@ -156,10 +144,14 @@ export default function App() {
 
   // --- Category mutations ---
   const addCategory = (payload) => {
-    setState((s) => ({
+    setState((s) => ensureContainers({
       ...s,
       categories: [...s.categories, { id: uid('cat'), ...payload }],
     }));
+  };
+
+  const addContainerTo = (parentId) => {
+    setState((s) => addContainer(s, parentId, uid('grp')));
   };
 
   const updateCategory = (id, payload) => {
@@ -170,22 +162,29 @@ export default function App() {
   };
 
   const deleteCategory = (id) => {
+    const target = categories.find((c) => c.id === id);
+    if (!target) return;
     // Guard + alert live OUTSIDE the updater: updaters must be pure, and
     // StrictMode runs them twice in dev (=> two alerts).
-    if (categories.length <= 1) {
+    if (target.parentId) {
+      setState((s) => deleteContainer(s, id)); // container: its bookmarks go too
+      return;
+    }
+    if (topLevel(categories).length <= 1) {
       alert('Keep at least one category — this is your last one.');
       return;
     }
-    setState((s) => {
-      const remaining = s.categories.filter((c) => c.id !== id);
-      const fallback = remaining[0]?.id;
-      if (!fallback) return s;
-      return {
-        ...s,
-        categories: remaining,
-        bookmarks: s.bookmarks.map((b) => (b.categoryId === id ? { ...b, categoryId: fallback } : b)),
-      };
-    });
+    setState((s) => deleteColumn(s, id));
+  };
+
+  // What the delete confirmation says, since columns and containers differ.
+  const deleteMessageFor = (cat) => {
+    if (!cat) return undefined;
+    if (!cat.parentId) return undefined; // modal's default (bookmarks move)
+    const n = (bookmarksByCategory[cat.id] || []).length;
+    return n === 0
+      ? `Delete the empty container "${cat.name}"?`
+      : `Delete "${cat.name}" and its ${n} bookmark${n === 1 ? '' : 's'}? This cannot be undone.`;
   };
 
   const openAddBookmarkFor = (categoryId) => {
@@ -279,11 +278,8 @@ export default function App() {
               layout={layout}
               categoryHeights={categoryHeights}
               onResizeCategoryHeight={setCategoryHeight}
-              secondaryHeights={secondaryHeights}
-              onResizeSecondaryHeight={setSecondaryHeight}
-              containerGrid={containerGrid}
-              onGrowContainerGrid={growContainerGrid}
-              maxRowsPerSubcol={MAX_ROWS_PER_SUBCOL}
+              onAddContainer={addContainerTo}
+              maxContainers={MAX_CONTAINERS_PER_COLUMN}
               categories={categories}
               bookmarksByCategory={bookmarksByCategory}
               onAddToCategory={openAddBookmarkFor}
@@ -318,7 +314,7 @@ export default function App() {
             else addBookmark(payload);
           }}
           onDelete={(id) => deleteBookmark(id)}
-          categories={categories}
+          categories={categoryOptions}
           defaultCategoryId={pendingCategoryId || undefined}
           initial={editingBookmark}
           anchorRect={bookmarkPopoverAnchor}
@@ -336,6 +332,7 @@ export default function App() {
             else addCategory(payload);
           }}
           onDelete={(id) => deleteCategory(id)}
+          deleteMessage={deleteMessageFor(editingCategory)}
           initial={editingCategory}
           anchorRect={categoryPopoverAnchor}
         />

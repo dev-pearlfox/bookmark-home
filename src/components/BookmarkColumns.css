@@ -465,7 +465,7 @@
      Per-category overrides (drag-resize handle) still win via inline style. */
   --pf-col-default-h: 360px;
   --pf-col-featured-h: 600px;   /* first two columns get a taller default */
-  --pf-col-secondary-h: 200px;  /* stacked container beneath each column */
+  --pf-col-container-h: 260px;  /* default height of a container under a column */
   display: flex;
   flex-direction: row;
   align-items: flex-start;   /* columns are fixed height; sit at the top */
@@ -485,7 +485,7 @@
   gap: 10px;
 }
 
-/* Stack of containers inside a slot (primary + secondary + extras).
+/* A column followed by its containers (each a real category column).
    Kept as a CSS grid — even though sub-cols is always 1 today — so we
    can bring back multi-column growth later without another rewrite. */
 .pf-cols__slot-grid {
@@ -553,9 +553,9 @@
 /* Featured columns: the first two positional slots get a taller default
    so the primary categories breathe. Per-category drag-resize (inline
    style) overrides this.
-   Descendant selector — the `.pf-col-secondary` extras use a different
-   base class so they're naturally excluded. Uses descendant (not `>`)
-   because the primary column lives inside `.pf-cols__slot-grid` now. */
+   Containers (.pf-col--container) get their own default height in
+   BookmarkColumns.horizontal.css, which loads later. Descendant (not `>`)
+   because the column lives inside `.pf-cols__slot-grid`. */
 .pf-cols[data-layout="horizontal"] .pf-cols__slot:nth-child(1) .pf-col[data-layout="horizontal"],
 .pf-cols[data-layout="horizontal"] .pf-cols__slot:nth-child(2) .pf-col[data-layout="horizontal"] {
   height: var(--pf-col-featured-h);

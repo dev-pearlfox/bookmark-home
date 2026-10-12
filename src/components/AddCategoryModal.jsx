@@ -6,7 +6,7 @@ import { getIcon } from './iconMap.js';
 
 const emptyForm = { name: '', icon: 'Bookmark', color: 'lilac' };
 
-export default function AddCategoryModal({ open, onClose, onSubmit, onDelete, initial, anchorRect }) {
+export default function AddCategoryModal({ open, onClose, onSubmit, onDelete, deleteMessage, initial, anchorRect }) {
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function AddCategoryModal({ open, onClose, onSubmit, onDelete, in
               className="pf-btn pf-btn--danger"
               type="button"
               onClick={() => {
-                if (window.confirm(`Delete "${initial.name}"? Its bookmarks will move to another category.`)) {
+                if (window.confirm(deleteMessage || `Delete "${initial.name}"? Its bookmarks will move to another category.`)) {
                   onDelete(initial.id);
                   onClose();
                 }

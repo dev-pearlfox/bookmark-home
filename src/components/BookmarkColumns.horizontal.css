@@ -82,3 +82,13 @@
 .pf-col--add[data-layout="horizontal"] .pf-col__add-plus {
   margin: 10px 0 0;
 }
+
+/* Containers stacked under a column. The extra `.pf-cols__slot-grid` in the
+   selector outranks the "featured column" rule above, so a container in the
+   first two slots is not stretched to 600px. An inline height (drag-resize)
+   still wins over both. */
+.pf-cols[data-layout="horizontal"] .pf-cols__slot-grid .pf-col.pf-col--container[data-layout="horizontal"] {
+  height: var(--pf-col-container-h);
+  min-height: var(--pf-col-container-h);
+  padding-top: 14px; /* no drag grip on containers, so less headroom needed */
+}

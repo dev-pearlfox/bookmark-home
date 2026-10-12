@@ -23,13 +23,16 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 
 const typeOf = (droppableOrActive) => droppableOrActive?.data?.current?.type;
 const isCategory = (item) => typeOf(item) === 'category';
+// Containers (categories stacked under a column, see containers.js) are
+// bookmark drop targets only: a COLUMN being dragged must never land on one.
+const isColumn = (item) => isCategory(item) && !item?.data?.current?.container;
 
 /** Collision detection for pointer AND keyboard drags. */
 export function collisionDetection(args) {
   if (isCategory(args.active)) {
     return closestCenter({
       ...args,
-      droppableContainers: args.droppableContainers.filter(isCategory),
+      droppableContainers: args.droppableContainers.filter(isColumn),
     });
   }
   // No pointer coordinates => keyboard drag (see header comment).
@@ -40,7 +43,7 @@ export function collisionDetection(args) {
 /**
  * Keyboard (arrow key) coordinate getter. Which droppables an arrow press may
  * land on:
- *  - dragging a category: other categories only;
+ *  - dragging a category: other columns only (not containers);
  *  - dragging a bookmark: every card and every column EXCEPT the bookmark's
  *    own column. A column's left/top edge always lies "before" the cards
  *    inside it, so without this, the first ArrowLeft/ArrowUp press would stop
@@ -51,7 +54,7 @@ export function keyboardCoordinates(event, args) {
   const { context } = args;
   const activeData = context.active?.data?.current;
   const isValidStop = isCategory(context.active)
-    ? isCategory
+    ? isColumn
     : (item) => !(isCategory(item) && item.data.current.categoryId === activeData?.categoryId);
 
   const all = context.droppableContainers;

@@ -10,11 +10,15 @@ import { openAll, describeOpenResult } from '../openAll.js';
 /**
  * A single category rendered as a Kanban-style column.
  * - Sortable: drag the grip on the header to reorder columns
+ * - `isContainer`: a box stacked under a column (see containers.js). It is a
+ *   bookmark drop target and has everything else, but no grip: it cannot be
+ *   dragged and a dragged column ignores it.
  * - Droppable (via useSortable) for bookmarks being dragged in
  * - Header title (icon + name) is directly clickable to edit
  */
 export default function CategoryColumn({
   layout = 'vertical',
+  isContainer = false,
   category,
   bookmarks,
   height,
@@ -34,7 +38,7 @@ export default function CategoryColumn({
      shared drag-to-resize plumbing. */
   const { isResizing, handlers: resizeHandlers } = useDragResize({
     onResize: onResizeHeight,
-    min: 280,
+    min: isContainer ? 140 : 280,
   });
 
   /* Open every bookmark in this category in a new tab (see openAll.js for
@@ -65,7 +69,8 @@ export default function CategoryColumn({
     isOver,
   } = useSortable({
     id: `col-cat-${category.id}`,
-    data: { type: 'category', categoryId: category.id, scope: 'columns' },
+    data: { type: 'category', categoryId: category.id, scope: 'columns', container: isContainer },
+    disabled: isContainer ? { draggable: true } : undefined,
     attributes: { roleDescription: 'draggable category' },
     transition: {
       duration: 320,
@@ -98,20 +103,23 @@ export default function CategoryColumn({
       data-resizing={isResizing || undefined}
       className={[
         'pf-col',
+        isContainer ? 'pf-col--container' : '',
         `pf-col--${category.color || 'lilac'}`,
         isOver ? 'is-over' : '',
         isDragging ? 'is-dragging' : '',
       ].join(' ')}
     >
-      <button
-        className="pf-col__grip"
-        aria-label={`Drag ${category.name}`}
-        title="Drag to reorder"
-        {...attributes}
-        {...listeners}
-      >
-        <GripIcon size={14} />
-      </button>
+      {!isContainer && (
+        <button
+          className="pf-col__grip"
+          aria-label={`Drag ${category.name}`}
+          title="Drag to reorder"
+          {...attributes}
+          {...listeners}
+        >
+          <GripIcon size={14} />
+        </button>
+      )}
 
       {!isVertical && onResizeHeight && (
         <button

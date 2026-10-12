@@ -2,93 +2,23 @@ import { Plus } from 'lucide-react';
 import { SortableContext, verticalListSortingStrategy, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import CategoryColumn from './CategoryColumn.jsx';
 import AddCategoryColumn from './AddCategoryColumn.jsx';
+import { childrenOf, topLevel } from '../containers.js';
 // Stylesheet load order matters (later rules override earlier ones at equal
-// specificity): base -> SecondaryContainer -> horizontal-mode overrides.
+// specificity): base -> horizontal-mode overrides.
 import './BookmarkColumns.css';
-import SecondaryContainer from './SecondaryContainer.jsx';
 import './BookmarkColumns.horizontal.css';
 
 /**
- * Fills a category slot's mini-grid with primary column + secondary +
- * user-added extras, stacked top-to-bottom in a single sub-column.
- */
-function renderSlotChildren({
-  cat,
-  rows,
-  layout,
-  bookmarksByCategory,
-  categoryHeights,
-  secondaryHeights,
-  onAddToCategory,
-  onEditBookmark,
-  onEditCategory,
-  onResizeCategoryHeight,
-  onResizeSecondaryHeight,
-}) {
-  const out = [];
-  for (let r = 0; r < rows; r += 1) {
-    if (r === 0) {
-      out.push(
-        <CategoryColumn
-          key={`col:${cat.id}`}
-          layout={layout}
-          category={cat}
-          bookmarks={bookmarksByCategory[cat.id] || []}
-          height={layout === 'horizontal' ? categoryHeights[cat.id] : undefined}
-          onAddToCategory={onAddToCategory}
-          onEditBookmark={onEditBookmark}
-          onEditCategory={onEditCategory}
-          onResizeHeight={
-            layout === 'horizontal' && onResizeCategoryHeight
-              ? (h) => onResizeCategoryHeight(cat.id, h)
-              : undefined
-          }
-        />
-      );
-    } else if (r === 1) {
-      // The one-and-only "primary" secondary — its height is stored
-      // under the category id so it survives grid growth.
-      out.push(
-        <SecondaryContainer
-          key={`sec:${cat.id}`}
-          category={cat}
-          height={secondaryHeights[cat.id]}
-          onAddToCategory={onAddToCategory}
-          onResizeHeight={
-            onResizeSecondaryHeight
-              ? (h) => onResizeSecondaryHeight(cat.id, h)
-              : undefined
-          }
-        />
-      );
-    } else {
-      // Extra placeholders — same behavior, no per-cell height store
-      // for MVP (all use the CSS default 200px).
-      out.push(
-        <SecondaryContainer
-          key={`extra:${cat.id}:${r}`}
-          category={cat}
-          onAddToCategory={onAddToCategory}
-        />
-      );
-    }
-  }
-  return out;
-}
-
-/**
- * The main Kanban-style landing view: one column per category.
+ * The main Kanban-style landing view: one column per top-level category, each
+ * with its containers (child categories) stacked beneath it.
  * Bookmarks arrive pre-grouped via `bookmarksByCategory` (see App.jsx).
  */
 export default function BookmarkColumns({
   layout = 'vertical',
   categoryHeights = {},
   onResizeCategoryHeight,
-  secondaryHeights = {},
-  onResizeSecondaryHeight,
-  containerGrid = {},
-  onGrowContainerGrid,
-  maxRowsPerSubcol = 20,
+  onAddContainer,
+  maxContainers = 19,
   categories,
   bookmarksByCategory,
   onAddToCategory,
@@ -100,49 +30,64 @@ export default function BookmarkColumns({
     ? horizontalListSortingStrategy
     : verticalListSortingStrategy;
   const isColumnView = layout === 'horizontal';
+  const columns = topLevel(categories);
+
+  // Everything a column and a container share; only `category` and
+  // `isContainer` differ between them.
+  const renderColumn = (cat, isContainer) => (
+    <CategoryColumn
+      key={`col:${cat.id}`}
+      layout={layout}
+      isContainer={isContainer}
+      category={cat}
+      bookmarks={bookmarksByCategory[cat.id] || []}
+      height={isColumnView ? categoryHeights[cat.id] : undefined}
+      onAddToCategory={onAddToCategory}
+      onEditBookmark={onEditBookmark}
+      onEditCategory={onEditCategory}
+      onResizeHeight={
+        isColumnView && onResizeCategoryHeight
+          ? (h) => onResizeCategoryHeight(cat.id, h)
+          : undefined
+      }
+    />
+  );
 
   return (
     <div className="pf-cols-wrap" data-layout={layout}>
       <SortableContext
-        items={categories.map((c) => `col-cat-${c.id}`)}
+        items={columns.map((c) => `col-cat-${c.id}`)}
         strategy={outerStrategy}
       >
         <div className="pf-cols" role="list" data-layout={layout}>
-          {categories.map((cat) => {
-            const totalRows = isColumnView ? 2 + (containerGrid[cat.id]?.rows || 0) : 1;
-            const canGrowRow = isColumnView && totalRows < maxRowsPerSubcol;
+          {columns.map((cat) => {
+            const containers = childrenOf(categories, cat.id);
+            const canAdd = isColumnView && containers.length < maxContainers;
             return (
-              <div
-                className="pf-cols__slot"
-                role="listitem"
-                key={cat.id}
-              >
+              <div className="pf-cols__slot" role="listitem" key={cat.id}>
                 <div
                   className="pf-cols__slot-grid"
-                  style={isColumnView ? { '--sub-rows': totalRows } : undefined}
+                  style={isColumnView ? { '--sub-rows': 1 + containers.length } : undefined}
                 >
-                  {renderSlotChildren({
-                    cat,
-                    rows: totalRows,
-                    layout,
-                    bookmarksByCategory,
-                    categoryHeights,
-                    secondaryHeights,
-                    onAddToCategory,
-                    onEditBookmark,
-                    onEditCategory,
-                    onResizeCategoryHeight,
-                    onResizeSecondaryHeight,
-                  })}
+                  {renderColumn(cat, false)}
+                  {/* Containers are never dragged, but they must sit in a
+                      SortableContext of their own: dnd-kit expects every
+                      sortable id to be listed in the nearest one. */}
+                  <SortableContext
+                    items={containers.map((c) => `col-cat-${c.id}`)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {containers.map((c) => renderColumn(c, true))}
+                  </SortableContext>
                 </div>
-                {isColumnView && onGrowContainerGrid && (
+                {isColumnView && onAddContainer && (
                   <button
                     type="button"
                     className="pf-cols__slot-add pf-cols__slot-add--row"
-                    onClick={() => onGrowContainerGrid(cat.id)}
-                    disabled={!canGrowRow}
+                    onClick={() => onAddContainer(cat.id)}
+                    disabled={!canAdd}
                     aria-label={`Add a container below ${cat.name}`}
-                    title={canGrowRow ? 'Add a container below' : `Max ${maxRowsPerSubcol} rows per column`}
+                    title={canAdd ? 'Add a container below' : `Max ${maxContainers} containers per column`}
                   >
                     <Plus size={14} strokeWidth={2.4} />
                     <span>Add below</span>
