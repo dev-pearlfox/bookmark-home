@@ -116,7 +116,6 @@ export default function BookmarkColumns({
                 className="pf-cols__slot"
                 role="listitem"
                 key={cat.id}
-                data-cat-slot={cat.id}
               >
                 <div
                   className="pf-cols__slot-grid"

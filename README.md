@@ -12,7 +12,8 @@ your browser (and, optionally, in a backup file on your own disk).
 - Drag-and-drop bookmarks between and within categories; drag categories to reorder
 - Two views: **Column View** (default, resizable, stackable containers) and **Shelf View**
 - Custom category names, icons and colours
-- "Open all" for a whole category
+- "Open all" for a whole category (browsers only allow one new tab per click unless you
+  allow pop-ups for this site; the app tells you if some were blocked)
 - Auto-fetched titles and favicons when you paste a URL
 - Optional **auto-backup** to a JSON file on disk (Chromium browsers), with manual restore
 
@@ -38,6 +39,7 @@ Every pull request must pass lint, tests, build and `npm audit` (see
 src/
 ├─ App.jsx          state + mutations + drag-and-drop wiring
 ├─ reorder.js       pure drag-drop reordering logic (unit-tested)
+├─ openAll.js       "Open all": opens tabs, counts what the browser blocked
 ├─ storage.js       the ONLY place that touches localStorage
 ├─ snapshot.js      validation + backup payload (state + layout sizes)
 ├─ backup.js        File System Access API + IndexedDB auto-backup

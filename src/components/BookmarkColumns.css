@@ -255,6 +255,33 @@
   box-shadow: var(--shadow-inner);
 }
 
+/* Message under the header (e.g. "Open all" was partly blocked by the browser) */
+.pf-col__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 8px 8px 12px;
+  border-radius: 12px;
+  background: var(--pf-lemon);
+  border: var(--border-soft);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-900);
+}
+.pf-col__notice p { flex: 1; margin: 0; }
+.pf-col__notice-close {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 6px;
+  color: var(--ink-700);
+  background: rgba(255, 255, 255, 0.6);
+}
+.pf-col__notice-close:hover { background: var(--surface-hover); color: var(--ink-900); }
+
 /* Body — horizontal shelf of bookmarks + add slot */
 .pf-col__body {
   flex: 1;

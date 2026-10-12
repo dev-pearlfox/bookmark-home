@@ -1,9 +1,11 @@
+import { useRef, useState } from 'react';
 import { useSortable, SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Pencil, GripVertical, GripHorizontal, ChevronsUpDown, ExternalLink } from 'lucide-react';
+import { Plus, Pencil, GripVertical, GripHorizontal, ChevronsUpDown, ExternalLink, X } from 'lucide-react';
 import BookmarkCard from './BookmarkCard.jsx';
 import { getIcon } from './iconMap.js';
 import { useDragResize } from './useDragResize.js';
+import { openAll, describeOpenResult } from '../openAll.js';
 
 /**
  * A single category rendered as a Kanban-style column.
@@ -35,17 +37,21 @@ export default function CategoryColumn({
     min: 280,
   });
 
-  /* Open every bookmark in this category in a new tab.
-     We click the REAL <a target="_blank"> nodes already rendered by
-     each BookmarkCard, scoped to this category's slot via
-     data-cat-slot. Real DOM anchors clicked inside a user-gesture
-     handler bypass popup blockers everywhere (Chrome, Safari, Firefox,
-     Edge) — the browser sees them as normal link activation, not as
-     scripted popups. */
+  /* Open every bookmark in this category in a new tab (see openAll.js for
+     why this can't be done by clicking the cards' links: browsers allow
+     one new tab per click unless pop-ups are allowed, and we need to know
+     when that happened so we can tell the user). */
+  const [openNotice, setOpenNotice] = useState('');
+  const openAllRef = useRef(null);
+
   const handleOpenAll = () => {
-    const slot = document.querySelector(`[data-cat-slot="${category.id}"]`);
-    const anchors = slot ? slot.querySelectorAll('a.pf-card__body') : [];
-    anchors.forEach((a) => a.click());
+    const result = openAll(bookmarks.map((b) => b.url));
+    setOpenNotice(describeOpenResult(result) || '');
+  };
+
+  const dismissOpenNotice = () => {
+    setOpenNotice('');
+    openAllRef.current?.focus(); // the dismiss button is about to disappear
   };
 
   const Icon = getIcon(category.icon);
@@ -133,6 +139,7 @@ export default function CategoryColumn({
         {bookmarks.length > 0 && (
           <button
             type="button"
+            ref={openAllRef}
             className="pf-col__open-all"
             onClick={handleOpenAll}
             aria-label={`Open all ${bookmarks.length} bookmarks in ${category.name}`}
@@ -144,6 +151,23 @@ export default function CategoryColumn({
           </button>
         )}
       </header>
+
+      {/* Always mounted so screen readers announce changes to it; visually
+          hidden because the banner below is the visible copy. */}
+      <span className="pf-sr-only" role="status">{openNotice}</span>
+      {openNotice && (
+        <div className="pf-col__notice">
+          <p>{openNotice}</p>
+          <button
+            type="button"
+            className="pf-col__notice-close"
+            onClick={dismissOpenNotice}
+            aria-label="Dismiss message"
+          >
+            <X size={12} strokeWidth={2.4} aria-hidden="true" />
+          </button>
+        </div>
+      )}
 
       <div className="pf-col__body">
         <SortableContext
