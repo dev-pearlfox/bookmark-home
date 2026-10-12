@@ -4,6 +4,7 @@ import {
   fetchTitle,
   getDomain,
   getFaviconUrl,
+  isPlausibleHostname,
   isPrivateHost,
   isSafeHttpUrl,
   normalizeUrl,
@@ -65,8 +66,34 @@ describe('getDomain / getFaviconUrl / domainToTitle', () => {
   });
 });
 
+describe('isPlausibleHostname', () => {
+  // Chrome (unlike Node) accepts hosts containing spaces and percent-encodes
+  // them, so the engine-independent hostname check is tested directly with
+  // what Chrome would hand back.
+  it.each([
+    'example.com', 'sub.example.co.uk', 'localhost', 'a_b.com', 'my-site.io',
+    'xn--mnchen-3ta45j.de', 'example.com.', '192.168.0.1', '[::1]', '[2001:db8::1]',
+  ])('accepts %s', (h) => {
+    expect(isPlausibleHostname(h)).toBe(true);
+  });
+
+  it.each([
+    'hello%20world', 'exa%20mple.com', 'hello world', 'a..b.com', '.example.com',
+    'exa<mple>.com', 'user@host', 'a/b', 'a:80', '', '[::1', 'münchen.de',
+  ])('rejects %j', (h) => {
+    expect(isPlausibleHostname(h)).toBe(false);
+  });
+
+  it('rejects non-strings', () => {
+    for (const v of [null, undefined, 42, {}]) expect(isPlausibleHostname(v)).toBe(false);
+  });
+});
+
 describe('isSafeHttpUrl', () => {
-  it.each(['https://a.com', 'http://a.com/x?y=1#z', 'HTTPS://A.COM'])('allows %s', (u) => {
+  it.each([
+    'https://a.com', 'http://a.com/x?y=1#z', 'HTTPS://A.COM',
+    'https://münchen.de', 'http://[::1]:8080/x', 'http://192.168.0.1', 'https://a_b.com',
+  ])('allows %s', (u) => {
     expect(isSafeHttpUrl(u)).toBe(true);
   });
 
@@ -81,6 +108,9 @@ describe('isSafeHttpUrl', () => {
     '//a.com',
     'a.com',
     'https://',
+    'https://hello world',
+    'https://exa mple.com/x',
+    'https://a..b.com',
     '',
   ])('blocks %j', (u) => {
     expect(isSafeHttpUrl(u)).toBe(false);

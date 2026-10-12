@@ -18,16 +18,30 @@ export function normalizeUrl(input) {
   return `https://${trimmed}`;
 }
 
+// Letters/digits/hyphen/underscore labels joined by dots (IDNs arrive here as
+// ASCII punycode), or a bracketed IPv6 literal. Deliberately strict.
+const PLAUSIBLE_HOSTNAME = /^(?:[a-z0-9_-]+\.)*[a-z0-9_-]+\.?$|^\[[0-9a-f:.]+\]$/i;
+
+/**
+ * Is this a hostname a real website could have? We can't lean on `new URL()`
+ * for this: engines disagree. Node rejects `https://hello world`, but Chrome
+ * accepts it and silently percent-encodes the host to `hello%20world`.
+ */
+export function isPlausibleHostname(hostname) {
+  return typeof hostname === 'string' && PLAUSIBLE_HOSTNAME.test(hostname);
+}
+
 /**
  * Allow-list for links we are willing to put in an `href`: absolute
- * http(s) URLs only. Blocks `javascript:`, `data:`, `vbscript:`, `file:` etc.
- * (Defence in depth — don't rely on the UI framework to catch these.)
+ * http(s) URLs with a plausible hostname. Blocks `javascript:`, `data:`,
+ * `vbscript:`, `file:` etc. (Defence in depth — don't rely on the UI
+ * framework to catch these.)
  */
 export function isSafeHttpUrl(url) {
   if (typeof url !== 'string') return false;
   try {
-    const { protocol } = new URL(url);
-    return protocol === 'http:' || protocol === 'https:';
+    const { protocol, hostname } = new URL(url);
+    return (protocol === 'http:' || protocol === 'https:') && isPlausibleHostname(hostname);
   } catch {
     return false;
   }
