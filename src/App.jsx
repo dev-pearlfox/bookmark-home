@@ -38,15 +38,10 @@ function seedState() {
 }
 
 export default function App() {
-  const [state, setState] = useState(() => {
-    const loaded = loadState();
-    if (loaded?.bookmarks) {
-      // Normalize display order on first load: oldest first, so subsequent
-      // drag-reorders can use the natural array position as source of truth.
-      loaded.bookmarks = [...loaded.bookmarks].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-    }
-    return loaded || seedState();
-  });
+  // Array position IS the display order (drag-and-drop reorders the array and
+  // saveState persists it), so loaded bookmarks must NOT be re-sorted here -
+  // an earlier createdAt sort silently undid every reorder on reload.
+  const [state, setState] = useState(() => loadState() || seedState());
   const [isAddBookmarkOpen, setAddBookmarkOpen] = useState(false);
   const [pendingCategoryId, setPendingCategoryId] = useState(null); // pre-select cat for add-modal
   const [editingBookmark, setEditingBookmark] = useState(null);
