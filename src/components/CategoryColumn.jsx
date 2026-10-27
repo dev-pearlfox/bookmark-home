@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useSortable, SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Pencil, GripVertical, GripHorizontal, ChevronsUpDown, X } from 'lucide-react';
+import { Plus, Pencil, GripVertical, GripHorizontal, ChevronsUpDown, X, SquareX } from 'lucide-react';
 import BookmarkCard from './BookmarkCard.jsx';
 import { getIcon } from './iconMap.js';
 import { useDragResize } from './useDragResize.js';
@@ -170,6 +170,8 @@ export default function CategoryColumn({
       <span className="pf-sr-only" role="status">{openNotice}</span>
       {openNotice && (
         <div className="pf-col__notice">
+          {/* A look-alike of the browser's "pop-up blocked" icon (not the real one; it differs per browser). The text says it all, so it is hidden from screen readers. */}
+          <SquareX className="pf-col__notice-icon" size={16} strokeWidth={2.2} aria-hidden="true" />
           <p>{openNotice}</p>
           <button
             type="button"
