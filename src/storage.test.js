@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { clearState, loadMap, loadState, saveMap, saveState } from './storage.js';
+import { clearState, loadLookups, loadMap, loadState, saveLookups, saveMap, saveState } from './storage.js';
 
 const KEY = 'pf.bookmarkHome.v1';
 
@@ -122,5 +122,27 @@ describe('loadMap / saveMap', () => {
     });
     expect(loadMap('k')).toEqual({});
     expect(() => saveMap('k', { a: 1 })).not.toThrow();
+  });
+});
+
+describe('loadLookups / saveLookups', () => {
+  const LOOKUPS_KEY = 'pf.bookmarkHome.lookups.v1';
+
+  it('returns null when nothing is saved', () => {
+    expect(loadLookups()).toBeNull();
+  });
+  it('round-trips the text value under its own key, not in the bookmark data', () => {
+    saveLookups('off');
+    expect(loadLookups()).toBe('off');
+    expect(storage.data.get(LOOKUPS_KEY)).toBe('off');
+    expect(storage.data.has(KEY)).toBe(false);
+  });
+  it('returns null if reading throws, and saving never throws', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => { throw new Error('blocked'); },
+      setItem: () => { throw new Error('full'); },
+    });
+    expect(loadLookups()).toBeNull();
+    expect(() => saveLookups('on')).not.toThrow();
   });
 });

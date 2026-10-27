@@ -1,0 +1,48 @@
+/* Header switch: [globe] Online lookups [o--] */
+.pf-lookups {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--surface-frost);
+  border: var(--border-soft);
+  color: var(--ink-700);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex: none;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.pf-lookups:hover { background: var(--surface-hover); transform: translateY(-1px); }
+.pf-lookups:active { transform: translateY(0); }
+.pf-lookups[data-on='false'] { color: var(--ink-500); }
+
+.pf-lookups__track {
+  position: relative;
+  width: 30px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--ink-300, rgba(0, 0, 0, 0.25));
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.pf-lookups[data-on='true'] .pf-lookups__track { background: var(--ink-500); }
+.pf-lookups__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.pf-lookups[data-on='true'] .pf-lookups__thumb { transform: translateX(14px); }
+
+/* Narrow header (same container query the view switch uses): icon and switch stay, the word goes. */
+@container (max-width: 1000px) {
+  .pf-lookups { padding: 0 10px; gap: 6px; }
+  .pf-lookups__label { display: none; }
+}

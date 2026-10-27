@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { faviconCandidates, GOOGLE_PLACEHOLDER_WIDTH } from '../metadata.js';
+import { useLookups } from '../lookups.js';
 
 /**
  * A bookmark's site icon. Walks faviconCandidates() until one is a real icon:
@@ -7,9 +8,18 @@ import { faviconCandidates, GOOGLE_PLACEHOLDER_WIDTH } from '../metadata.js';
  * on to the next candidate. If none is real it shows a crisp letter tile
  * instead of a blurry stretched globe. Mount it with a `key` that changes with
  * the bookmark's url/favicon so the walk restarts for a different bookmark.
+ *
+ * When the online-lookups setting is off there are no candidates, so it is
+ * always the letter tile and no request goes to Google.
  */
-export default function Favicon({ bookmark, label, size = 38 }) {
-  const candidates = faviconCandidates(bookmark);
+export default function Favicon(props) {
+  const lookups = useLookups();
+  // A new key when the setting flips restarts the walk (an old index could point past the end).
+  return <FaviconImage key={lookups ? 'on' : 'off'} lookups={lookups} {...props} />;
+}
+
+function FaviconImage({ bookmark, label, size = 38, lookups }) {
+  const candidates = faviconCandidates(bookmark, 128, { enabled: lookups });
   const [index, setIndex] = useState(0);
   const current = candidates[index];
 

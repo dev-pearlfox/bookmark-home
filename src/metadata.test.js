@@ -191,6 +191,20 @@ describe('fetchTitle', () => {
     await expect(fetchTitle('https://github.com')).resolves.toBe('Github');
   });
 
+  it('makes no request at all when the online-lookups setting is off', async () => {
+    const fetchMock = stubFetch(async () => ({ ok: true, json: async () => ({ data: { title: 'X' } }) }));
+    await expect(fetchTitle('https://github.com', { enabled: false })).resolves.toBe('Github');
+    await expect(fetchTitle('https://a.com/private?token=abc', { enabled: false })).resolves.toBe('A');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('still asks when enabled is true or left out', async () => {
+    const fetchMock = stubFetch(async () => ({ ok: true, json: async () => ({ data: { title: 'T' } }) }));
+    await fetchTitle('https://github.com', { enabled: true });
+    await fetchTitle('https://github.com');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it('never calls the network for private hosts', async () => {
     const fetchMock = stubFetch(async () => ({ ok: true, json: async () => ({ data: { title: 'X' } }) }));
     await expect(fetchTitle('http://localhost:3000')).resolves.toBe('Localhost');
@@ -272,6 +286,11 @@ describe('faviconCandidates', () => {
   });
   it('caps the number of attempts on very deep hostnames', () => {
     expect(hostsOf({ url: 'https://a.b.c.d.e.f.example.com' }).length).toBe(4);
+  });
+  it('returns no candidates when the online-lookups setting is off (so no image request is made)', () => {
+    expect(faviconCandidates({ url: 'https://github.com/x' }, 128, { enabled: false })).toEqual([]);
+    expect(faviconCandidates({ favicon: 'https://www.google.com/s2/favicons?domain=a.com&sz=64', url: 'https://a.com' }, 128, { enabled: false })).toEqual([]);
+    expect(faviconCandidates({ url: 'https://github.com/x' }, 128, { enabled: true }).length).toBeGreaterThan(0);
   });
   it('marks Google icons as generated so they get size-checked', () => {
     expect(faviconCandidates({ url: 'https://example.com' }).every((c) => c.generated)).toBe(true);

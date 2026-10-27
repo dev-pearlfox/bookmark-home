@@ -70,6 +70,12 @@ src/
   Title lookup is skipped for private hosts (`localhost`, intranet names,
   `.local`/`.internal`, private IP ranges); the domain is used as the title.
 
+  **Online lookups switch.** The "Online lookups" switch in the header turns both
+  services off. It is on by default. When it is off, nothing is sent to Google or
+  Microlink: titles come from the domain name and icons are letter tiles. The choice
+  is saved in your browser (`pf.bookmarkHome.lookups.v1`), not in your bookmarks or
+  backups.
+
 ## Deployment
 
 Pushing to `main` builds and deploys to GitHub Pages via

@@ -106,8 +106,13 @@ const MAX_ICON_CANDIDATES = 4;
  * Google only knows some hostnames: console.cloud.google.com has no icon, but
  * cloud.google.com and google.com do. So after the full host we try each
  * parent domain (never a bare TLD, a bare IP, or a co.uk style suffix).
+ *
+ * With `enabled: false` (the online-lookups setting is off) there are no
+ * candidates at all, so the caller draws its letter tile and no image request
+ * is made to anyone.
  */
-export function faviconCandidates({ favicon, url } = {}, size = 128) {
+export function faviconCandidates({ favicon, url } = {}, size = 128, { enabled = true } = {}) {
+  if (!enabled) return [];
   if (favicon && !favicon.startsWith(GOOGLE_FAVICON_PREFIX)) {
     return [{ src: favicon, generated: false }];
   }
@@ -156,11 +161,13 @@ export function bookmarkLabel({ title, url } = {}) {
 
 /**
  * Fetch page title via microlink. Times out and falls back gracefully so
- * the UI never blocks on a slow network.
+ * the UI never blocks on a slow network. With `enabled: false` (the
+ * online-lookups setting is off) it makes no request and returns the
+ * domain-based title.
  */
-export async function fetchTitle(url, { timeoutMs = 4000 } = {}) {
+export async function fetchTitle(url, { timeoutMs = 4000, enabled = true } = {}) {
   const fallback = domainToTitle(url);
-  if (!url || isPrivateHost(url)) return fallback;
+  if (!enabled || !url || isPrivateHost(url)) return fallback;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

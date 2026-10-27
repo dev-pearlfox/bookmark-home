@@ -13,7 +13,7 @@ import AddCategoryModal from './components/AddCategoryModal.jsx';
 import { useHeightsMap } from './components/useHeightsMap.js';
 
 import { DEFAULT_CATEGORIES, SAMPLE_BOOKMARKS } from './defaultData.js';
-import { loadState, saveState, loadZoom, saveZoom } from './storage.js';
+import { loadState, saveState, loadZoom, saveZoom, loadLookups, saveLookups } from './storage.js';
 import { useStableCallback } from './useStableCallback.js';
 import { writeBackup } from './backup.js';
 import { buildSnapshot, serializeSnapshot, splitSnapshot } from './snapshot.js';
@@ -22,6 +22,7 @@ import { hasLinkPayload, trackInternalDrags } from './linkDrop.js';
 import { readClipboardLink } from './clipboardLink.js';
 import { swallowClickAfterTouchDrag } from './swallowClick.js';
 import { applyZoom, clampZoom } from './zoom.js';
+import { LookupsContext, parseLookups, serializeLookups } from './lookups.js';
 import { bookmarkLabel, fetchTitle, getDomain, getFaviconUrl } from './metadata.js';
 import {
   MAX_CONTAINERS_PER_COLUMN, addContainer, categoryLabel, deleteColumn, deleteContainer,
@@ -67,6 +68,9 @@ export default function App() {
   // <html> (main.jsx already did it once before the first render); index.css
   // turns it into CSS `zoom`. Saved so it survives reloads.
   const [zoom, setZoom] = useState(() => clampZoom(loadZoom()));
+  // Online lookups (Microlink titles, Google icons). On unless the visitor turned it off; saved on its own key.
+  const [lookups, setLookups] = useState(() => parseLookups(loadLookups()));
+  useEffect(() => { saveLookups(serializeLookups(lookups)); }, [lookups]);
   useEffect(() => {
     applyZoom(zoom);
     saveZoom(zoom);
@@ -179,7 +183,7 @@ export default function App() {
     // Same as the Add form: swap in the page's real title when it arrives,
     // unless the user already renamed it in the meantime.
     if (!link.title) {
-      fetchTitle(link.url).then((real) => {
+      fetchTitle(link.url, { enabled: lookups }).then((real) => {
         if (!real || real === title) return;
         setState((s) => ({
           ...s,
@@ -337,119 +341,123 @@ export default function App() {
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      accessibility={accessibility}
-      collisionDetection={collisionDetection}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragCancel={(event) => {
-        setActiveDragBookmark(null);
-        setActiveDragCategory(null);
-        swallowClickAfterTouchDrag(event.activatorEvent);
-      }}
-    >
-      <div className="pf-app">
-        <Header
-          bookmarkCount={bookmarks.length}
-          getStateSnapshot={getStateSnapshot}
-          onRestore={handleRestore}
-          zoom={zoom}
-          onZoomChange={setZoom}
-        />
+    <LookupsContext.Provider value={lookups}>
+      <DndContext
+        sensors={sensors}
+        accessibility={accessibility}
+        collisionDetection={collisionDetection}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={(event) => {
+          setActiveDragBookmark(null);
+          setActiveDragCategory(null);
+          swallowClickAfterTouchDrag(event.activatorEvent);
+        }}
+      >
+        <div className="pf-app">
+          <Header
+            bookmarkCount={bookmarks.length}
+            getStateSnapshot={getStateSnapshot}
+            onRestore={handleRestore}
+            zoom={zoom}
+            onZoomChange={setZoom}
+            lookups={lookups}
+            onLookupsChange={setLookups}
+          />
 
-        <main className="pf-main">
-          <div className="pf-cols-scroll">
-            <BookmarkColumns
-              layout={layout}
-              categoryHeights={categoryHeights}
-              onResizeCategoryHeight={setCategoryHeight}
-              onAddContainer={addContainerTo}
-              onDropLink={addLinkTo}
-              maxContainers={MAX_CONTAINERS_PER_COLUMN}
-              categories={categories}
-              bookmarksByCategory={bookmarksByCategory}
-              onAddToCategory={openAddBookmarkFor}
-              onEditBookmark={openEditBookmark}
-              onEditCategory={(id, rect) => {
-                const cat = categories.find((c) => c.id === id);
-                if (cat) {
-                  setEditingCategory(cat);
+          <main className="pf-main">
+            <div className="pf-cols-scroll">
+              <BookmarkColumns
+                layout={layout}
+                categoryHeights={categoryHeights}
+                onResizeCategoryHeight={setCategoryHeight}
+                onAddContainer={addContainerTo}
+                onDropLink={addLinkTo}
+                maxContainers={MAX_CONTAINERS_PER_COLUMN}
+                categories={categories}
+                bookmarksByCategory={bookmarksByCategory}
+                onAddToCategory={openAddBookmarkFor}
+                onEditBookmark={openEditBookmark}
+                onEditCategory={(id, rect) => {
+                  const cat = categories.find((c) => c.id === id);
+                  if (cat) {
+                    setEditingCategory(cat);
+                    setCategoryPopoverAnchor(rect || null);
+                    setAddCategoryOpen(true);
+                  }
+                }}
+                onAddCategory={(rect) => {
+                  setEditingCategory(null);
                   setCategoryPopoverAnchor(rect || null);
                   setAddCategoryOpen(true);
-                }
-              }}
-              onAddCategory={(rect) => {
-                setEditingCategory(null);
-                setCategoryPopoverAnchor(rect || null);
-                setAddCategoryOpen(true);
-              }}
-            />
-          </div>
-        </main>
+                }}
+              />
+            </div>
+          </main>
 
-        <AddBookmarkModal
-          open={isAddBookmarkOpen}
-          onClose={() => {
-            setAddBookmarkOpen(false);
-            setPendingCategoryId(null);
-            setEditingBookmark(null);
-            setBookmarkPopoverAnchor(null);
-          }}
-          onSubmit={(payload) => {
-            if (editingBookmark) updateBookmark(editingBookmark.id, payload);
-            else addBookmark(payload);
-          }}
-          onDelete={(id) => deleteBookmark(id)}
-          // The category is never asked for: an add comes from a column's "+"
-          // (pendingCategoryId), an edit keeps the bookmark's own.
-          defaultCategoryId={pendingCategoryId || topLevel(categories)[0]?.id}
-          initial={editingBookmark}
-          anchorRect={bookmarkPopoverAnchor}
-        />
+          <AddBookmarkModal
+            open={isAddBookmarkOpen}
+            onClose={() => {
+              setAddBookmarkOpen(false);
+              setPendingCategoryId(null);
+              setEditingBookmark(null);
+              setBookmarkPopoverAnchor(null);
+            }}
+            onSubmit={(payload) => {
+              if (editingBookmark) updateBookmark(editingBookmark.id, payload);
+              else addBookmark(payload);
+            }}
+            onDelete={(id) => deleteBookmark(id)}
+            // The category is never asked for: an add comes from a column's "+"
+            // (pendingCategoryId), an edit keeps the bookmark's own.
+            defaultCategoryId={pendingCategoryId || topLevel(categories)[0]?.id}
+            initial={editingBookmark}
+            anchorRect={bookmarkPopoverAnchor}
+          />
 
-        <AddCategoryModal
-          open={addCategoryOpen}
-          onClose={() => {
-            setAddCategoryOpen(false);
-            setEditingCategory(null);
-            setCategoryPopoverAnchor(null);
-          }}
-          onSubmit={(payload) => {
-            if (editingCategory) updateCategory(editingCategory.id, payload);
-            else addCategory(payload);
-          }}
-          onDelete={(id) => deleteCategory(id)}
-          deleteMessage={deleteMessageFor(editingCategory)}
-          initial={editingCategory}
-          anchorRect={categoryPopoverAnchor}
-        />
-      </div>
+          <AddCategoryModal
+            open={addCategoryOpen}
+            onClose={() => {
+              setAddCategoryOpen(false);
+              setEditingCategory(null);
+              setCategoryPopoverAnchor(null);
+            }}
+            onSubmit={(payload) => {
+              if (editingCategory) updateCategory(editingCategory.id, payload);
+              else addCategory(payload);
+            }}
+            onDelete={(id) => deleteCategory(id)}
+            deleteMessage={deleteMessageFor(editingCategory)}
+            initial={editingCategory}
+            anchorRect={categoryPopoverAnchor}
+          />
+        </div>
 
-      {/* Spoken and shown after a link is dropped in from the browser. */}
-      <div className="pf-toast" role="status">
-        {toast?.text}
-        {toast?.undoId && (
-          <button
-            type="button"
-            className="pf-toast__undo"
-            onClick={() => { deleteBookmark(toast.undoId); setToast({ text: 'Removed.' }); }}
-          >
-            Undo
-          </button>
-        )}
-      </div>
+        {/* Spoken and shown after a link is dropped in from the browser. */}
+        <div className="pf-toast" role="status">
+          {toast?.text}
+          {toast?.undoId && (
+            <button
+              type="button"
+              className="pf-toast__undo"
+              onClick={() => { deleteBookmark(toast.undoId); setToast({ text: 'Removed.' }); }}
+            >
+              Undo
+            </button>
+          )}
+        </div>
 
-      <DragOverlay
-        className="pf-drag-overlay"
-        dropAnimation={{ duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }}
-      >
-        {activeDragBookmark ? (
-          <BookmarkCard bookmark={activeDragBookmark} dragOverlay />
-        ) : activeDragCategory ? (
-          <CategoryDragPreview category={activeDragCategory} />
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+        <DragOverlay
+          className="pf-drag-overlay"
+          dropAnimation={{ duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }}
+        >
+          {activeDragBookmark ? (
+            <BookmarkCard bookmark={activeDragBookmark} dragOverlay />
+          ) : activeDragCategory ? (
+            <CategoryDragPreview category={activeDragCategory} />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+    </LookupsContext.Provider>
   );
 }

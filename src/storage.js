@@ -84,3 +84,24 @@ export function saveZoom(percent) {
     console.warn('[storage] failed to save zoom', err);
   }
 }
+
+/* --- Online lookups (Microlink titles, Google icons): 'on' or 'off', its own key --- */
+const LOOKUPS_KEY = 'pf.bookmarkHome.lookups.v1';
+
+/** Raw saved value (or null). The caller turns it into a boolean with parseLookups. */
+export function loadLookups() {
+  try {
+    return localStorage.getItem(LOOKUPS_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** `value` is the text from serializeLookups(): 'on' or 'off'. */
+export function saveLookups(value) {
+  try {
+    localStorage.setItem(LOOKUPS_KEY, value);
+  } catch (err) {
+    console.warn('[storage] failed to save lookups setting', err);
+  }
+}

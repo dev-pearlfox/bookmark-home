@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import Modal from './Modal.jsx';
 import { normalizeUrl, fetchTitle, getFaviconUrl, isSafeHttpUrl, bookmarkLabel } from '../metadata.js';
+import { useLookups } from '../lookups.js';
 
 const emptyForm = { url: '', title: '', categoryId: '' };
 
@@ -25,6 +26,7 @@ export default function AddBookmarkModal({
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
+  const lookups = useLookups();
 
   useEffect(() => {
     if (!open) return;
@@ -51,14 +53,14 @@ export default function AddBookmarkModal({
     const handle = setTimeout(async () => {
       if (form.title.trim()) return;
       setLoading(true);
-      const title = await fetchTitle(url);
+      const title = await fetchTitle(url, { enabled: lookups });
       setLoading(false);
       setForm((f) => (f.title.trim() ? f : { ...f, title }));
     }, 500);
 
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.url, isEdit]);
+  }, [form.url, isEdit, lookups]);
 
   // Same rule the loader enforces (isSafeHttpUrl) — otherwise we'd happily
   // save a link that gets silently dropped on the next reload.
@@ -152,7 +154,7 @@ export default function AddBookmarkModal({
 
         {previewUrl && !isEdit && (
           <div className="pf-preview">
-            <img src={getFaviconUrl(previewUrl)} alt="" width={20} height={20} />
+            {lookups && <img src={getFaviconUrl(previewUrl)} alt="" width={20} height={20} />}
             <span>{previewUrl}</span>
           </div>
         )}
