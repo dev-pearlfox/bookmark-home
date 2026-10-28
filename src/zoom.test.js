@@ -16,20 +16,22 @@ describe('ZOOM_DEFAULT', () => {
 
 describe('clampZoom', () => {
   it('keeps valid steps as they are', () => {
-    for (const z of [70, 100, 130, 200]) expect(clampZoom(z)).toBe(z);
+    for (const z of [70, 80, 90, 100, 110]) expect(clampZoom(z)).toBe(z);
   });
   it('clamps to the range', () => {
     expect(clampZoom(10)).toBe(ZOOM_MIN);
     expect(clampZoom(500)).toBe(ZOOM_MAX);
     expect(clampZoom(-50)).toBe(ZOOM_MIN);
+    expect(clampZoom(150)).toBe(110);   // a larger zoom saved by an earlier version
+    expect(clampZoom(200)).toBe(110);
   });
   it('snaps in-between values to the nearest 10', () => {
     expect(clampZoom(104)).toBe(100);
     expect(clampZoom(106)).toBe(110);
   });
   it('accepts numeric strings (saved value, slider value)', () => {
-    expect(clampZoom('150')).toBe(150);
-    expect(clampZoom(' 120 ')).toBe(120);
+    expect(clampZoom('100')).toBe(100);
+    expect(clampZoom(' 80 ')).toBe(80);
   });
   it('falls back to the default for garbage, so a bad saved value never breaks the page', () => {
     for (const bad of [undefined, null, NaN, '', '  ', 'abc', {}, [], Infinity]) {
@@ -67,7 +69,7 @@ describe('canZoomIn / canZoomOut', () => {
 
 describe('readZoomFactor', () => {
   it('reads the factor the app set on the root element', () => {
-    expect(readZoomFactor(rootWith('1.5'))).toBe(1.5);
+    expect(readZoomFactor(rootWith('1.1'))).toBe(1.1);
     expect(readZoomFactor(rootWith('0.7'))).toBe(0.7);
   });
   it('is 1 when nothing is set or the value is junk', () => {
@@ -77,7 +79,7 @@ describe('readZoomFactor', () => {
     expect(readZoomFactor({})).toBe(1);
   });
   it('stays inside the supported range', () => {
-    expect(readZoomFactor(rootWith('9'))).toBe(2);
+    expect(readZoomFactor(rootWith('9'))).toBe(1.1);
     expect(readZoomFactor(rootWith('0.01'))).toBe(0.7);
   });
 });
@@ -88,12 +90,12 @@ describe('applyZoom', () => {
     return { set, style: { setProperty: (k, v) => { set[k] = v; } } };
   };
   it('writes the factor the stylesheet turns into CSS zoom', () => {
-    const r = fakeRoot(); applyZoom(150, r);
-    expect(r.set['--pf-zoom']).toBe('1.5');
+    const r = fakeRoot(); applyZoom(110, r);
+    expect(r.set['--pf-zoom']).toBe('1.1');
   });
   it('never writes an out-of-range or invalid factor', () => {
     const r = fakeRoot();
-    applyZoom(9999, r); expect(r.set['--pf-zoom']).toBe('2');
+    applyZoom(9999, r); expect(r.set['--pf-zoom']).toBe('1.1');
     applyZoom(1, r); expect(r.set['--pf-zoom']).toBe('0.7');
     applyZoom(null, r); expect(r.set['--pf-zoom']).toBe(String(ZOOM_DEFAULT / 100));
   });

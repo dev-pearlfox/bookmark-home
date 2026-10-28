@@ -3,10 +3,12 @@
  * through these so the range and step are defined in exactly one place.
  * Values are whole percentages (100 = the browser's normal size). The app
  * starts at ZOOM_DEFAULT, which is deliberately a bit smaller than 100.
+ * Five levels only: 70, 80, 90 (default), 100, 110 (owner decision 2026-10-28). A bigger
+ * zoom saved by an earlier version is brought down to 110 by clampZoom.
  */
 
 export const ZOOM_MIN = 70;
-export const ZOOM_MAX = 200;
+export const ZOOM_MAX = 110;
 export const ZOOM_STEP = 10;
 export const ZOOM_DEFAULT = 90;
 

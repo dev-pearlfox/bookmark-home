@@ -61,7 +61,7 @@ export default function App() {
   const [categoryPopoverAnchor, setCategoryPopoverAnchor] = useState(null);
   const [activeDragBookmark, setActiveDragBookmark] = useState(null);
   const [activeDragCategory, setActiveDragCategory] = useState(null);
-  // The view is locked to Column View (owner decision); see Header's ViewSwitch.
+  // Column View is the only view (owner decision); the header has no view switch.
   const layout = 'horizontal';
 
   // Page zoom (this site only). applyZoom sets the --pf-zoom variable on

@@ -10,7 +10,7 @@ your browser (and, optionally, in a backup file on your own disk).
 ## Features
 
 - Drag-and-drop bookmarks between and within categories; drag categories to reorder
-- Two views: **Column View** (default, resizable, with named containers stacked under each column) and **Shelf View**
+- **Column View**: resizable columns, with named containers stacked under each column
 - Custom category names, icons and colours
 - "Open all" for a whole category (browsers only allow one new tab per click unless you
   allow pop-ups for this site; the app tells you if some were blocked)
