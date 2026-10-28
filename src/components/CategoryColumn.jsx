@@ -80,6 +80,10 @@ export default function CategoryColumn({
   const { isLinkOver, handlers: linkDropHandlers } = useLinkDrop((link) => onDropLink?.(category.id, link));
 
   const Icon = getIcon(category.icon);
+  // The add button shows only a plus, so this text is its name for screen readers and its tooltip.
+  const addLabel = bookmarks.length === 0
+    ? `Add your first bookmark to ${category.name}`
+    : `Add a bookmark to ${category.name}`;
   const {
     setNodeRef,
     attributes,
@@ -215,13 +219,10 @@ export default function CategoryColumn({
         <button
           className="pf-col__slot"
           onClick={() => onAddToCategory(category.id)}
-          aria-label={`Add a bookmark to ${category.name}`}
-          title={`Add a bookmark to ${category.name}`}
+          aria-label={addLabel}
+          title={addLabel}
         >
           <span className="pf-col__slot-icon"><Plus size={18} strokeWidth={2.4} /></span>
-          <span className="pf-col__slot-label">
-            {bookmarks.length === 0 ? 'Add your first bookmark here' : 'Add a bookmark'}
-          </span>
         </button>
       </div>
     </section>

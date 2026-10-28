@@ -317,12 +317,15 @@
 
 /* Inline "next-slot" plus tile — sits at the END of the horizontal shelf */
 .pf-col__slot {
+  /* Just a plus in a small dashed square, centred under the cards. The words
+     are not drawn; the button keeps its aria-label and tooltip. */
   flex: none;
-  width: 200px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px;
+  align-self: center;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
   border-radius: 14px;
   color: var(--ink-500);
   background: rgba(255,255,255,0.35);
@@ -332,9 +335,6 @@
               color var(--dur-fast) var(--ease-out),
               border-color var(--dur-fast) var(--ease-out),
               box-shadow var(--dur-fast) var(--ease-out);
-  text-align: left;
-  font-size: 12.5px;
-  font-weight: 500;
   scroll-snap-align: end;
 }
 
@@ -349,14 +349,6 @@
   box-shadow: var(--shadow-inner);
   flex: none;
   transition: transform var(--dur-fast) var(--ease-out);
-}
-
-.pf-col__slot-label {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .pf-col__slot:hover {
@@ -450,7 +442,6 @@
 
 @media (max-width: 700px) {
   .pf-col__body .pf-card { width: 210px; }
-  .pf-col__slot { width: 180px; }
 }
 
 /* ============================================================

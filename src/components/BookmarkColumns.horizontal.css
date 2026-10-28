@@ -47,7 +47,6 @@
 }
 
 .pf-col[data-layout="horizontal"] .pf-col__slot {
-  width: auto;
   scroll-snap-align: none;
 }
 
