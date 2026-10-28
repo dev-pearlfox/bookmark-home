@@ -1,12 +1,28 @@
 import { useRef, useState } from 'react';
 import { useSortable, SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Pencil, GripVertical, GripHorizontal, ChevronsUpDown, X, SquareX } from 'lucide-react';
+import { Plus, Pencil, GripVertical, GripHorizontal, ChevronsUpDown, X } from 'lucide-react';
 import BookmarkCard from './BookmarkCard.jsx';
 import { getIcon } from './iconMap.js';
 import { useDragResize } from './useDragResize.js';
 import { useLinkDrop } from './useLinkDrop.js';
-import { openAll, describeOpenResult } from '../openAll.js';
+import BlockedPopupIcon from './BlockedPopupIcon.jsx';
+import { openAll, describeOpenResult, POPUP_ICON_PHRASE } from '../openAll.js';
+
+/** The banner text, with the pop-up-blocked icon drawn right after the words it explains. */
+function noticeWithIcon(text) {
+  const at = text.indexOf(POPUP_ICON_PHRASE);
+  if (at === -1) return text;
+  const end = at + POPUP_ICON_PHRASE.length;
+  return (
+    <>
+      {text.slice(0, end)}
+      {' '}
+      <BlockedPopupIcon className="pf-col__notice-icon" size={15} />
+      {text.slice(end)}
+    </>
+  );
+}
 
 /**
  * A single category rendered as a Kanban-style column.
@@ -170,9 +186,7 @@ export default function CategoryColumn({
       <span className="pf-sr-only" role="status">{openNotice}</span>
       {openNotice && (
         <div className="pf-col__notice">
-          {/* A look-alike of the browser's "pop-up blocked" icon (not the real one; it differs per browser). The text says it all, so it is hidden from screen readers. */}
-          <SquareX className="pf-col__notice-icon" size={16} strokeWidth={2.2} aria-hidden="true" />
-          <p>{openNotice}</p>
+          <p>{noticeWithIcon(openNotice)}</p>
           <button
             type="button"
             className="pf-col__notice-close"

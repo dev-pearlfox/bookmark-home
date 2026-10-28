@@ -42,10 +42,13 @@ export function openAll(urls, open = openInNewTab) {
   return { total: safe.length, opened, blocked: safe.length - opened };
 }
 
+/** The words the banner draws an icon next to (see CategoryColumn). Kept here so the message and the banner cannot drift apart. */
+export const POPUP_ICON_PHRASE = 'blocked pop-up icon';
+
 /** Message for the user when something was blocked; null when all opened. */
 export function describeOpenResult({ total, opened, blocked }) {
   if (blocked === 0) return null;
-  const how = 'Allow pop-ups for this site (click the blocked pop-up icon in the address bar), then press Open all again.';
+  const how = `Allow pop-ups for this site (click the ${POPUP_ICON_PHRASE} in the address bar), then press Open all again.`;
   if (opened === 0) {
     return `Your browser blocked all ${total} tab${total === 1 ? '' : 's'}. ${how}`;
   }

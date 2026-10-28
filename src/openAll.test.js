@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { describeOpenResult, openAll, openInNewTab } from './openAll.js';
+import { POPUP_ICON_PHRASE, describeOpenResult, openAll, openInNewTab } from './openAll.js';
 
 const urls = ['https://a.com', 'https://b.com', 'https://c.com', 'https://d.com', 'https://e.com'];
 
@@ -77,6 +77,11 @@ describe('describeOpenResult', () => {
     expect(msg).toContain('Opened 1 of 5');
     expect(msg).toMatch(/allow pop-ups/i);
     expect(msg).toContain('Open all again');
+  });
+
+  it('always contains the phrase the banner puts its icon next to', () => {
+    expect(describeOpenResult({ total: 5, opened: 1, blocked: 4 })).toContain(POPUP_ICON_PHRASE);
+    expect(describeOpenResult({ total: 2, opened: 0, blocked: 2 })).toContain(POPUP_ICON_PHRASE);
   });
 
   it('has a distinct message when nothing opened, with correct plural', () => {

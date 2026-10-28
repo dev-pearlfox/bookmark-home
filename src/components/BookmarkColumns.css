@@ -280,7 +280,7 @@
   color: var(--ink-900);
 }
 .pf-col__notice p { flex: 1; margin: 0; }
-.pf-col__notice-icon { flex: none; margin-top: 1px; color: var(--ink-700); }
+.pf-col__notice-icon { display: inline-block; vertical-align: -3px; color: var(--ink-700); }
 .pf-col__notice-close {
   flex: none;
   width: 20px;
