@@ -72,61 +72,51 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Animated pastel aurora background */
-body::before,
-body::after {
-  content: '';
+/* Animated pastel aurora background.
+   Six soft colour blobs, each drifting on its own slow path (26 to 40 s per
+   loop, started at different points) so the colours visibly flow around the
+   page instead of moving together as one sheet. Only `transform` is animated,
+   so every frame is a GPU composite: no repaint, no reflow. No blur filter
+   (see RULES: performance). The blobs are plain markup in index.html. */
+.pf-aurora {
   position: fixed;
   inset: 0;
   z-index: -1;
+  overflow: hidden;
   pointer-events: none;
 }
 
-body::before {
-  background:
-    radial-gradient(1000px 700px at 10% 5%,  var(--pf-pink)  0%, transparent 60%),
-    radial-gradient(900px  700px at 90% 15%, var(--pf-sky)   0%, transparent 60%),
-    radial-gradient(900px  700px at 20% 90%, var(--pf-mint)  0%, transparent 60%),
-    radial-gradient(1000px 700px at 85% 85%, var(--pf-lilac) 0%, transparent 60%);
-  filter: saturate(1.05);
-  animation: aurora-a 24s ease-in-out infinite;
+.pf-aurora__blob {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w, 70vmax);
+  height: var(--h, 52vmax);
+  background: radial-gradient(closest-side, var(--c) 0%, transparent 100%);
+  opacity: var(--o, 1);
+  transform: translate3d(-50%, -50%, 0);
+  animation: aurora-drift var(--t) ease-in-out infinite;
+  animation-delay: var(--d, 0s);
   will-change: transform;
-  /* Slightly oversize so the transform never reveals hard edges */
-  transform-origin: 50% 50%;
 }
 
-body::after {
-  background:
-    radial-gradient(700px 500px at 50% 50%, var(--pf-peach) 0%, transparent 65%),
-    radial-gradient(600px 500px at 30% 70%, var(--pf-rose)  0%, transparent 65%);
-  opacity: 0.55;
-  animation: aurora-b 32s ease-in-out infinite;
-  will-change: transform;
-  transform-origin: 50% 50%;
+.pf-aurora__blob--pink  { --x: 10%; --y: 5%;  --c: var(--pf-pink);  --dx: 14vw;  --dy: 12vh;  --t: 28s; --d: -9s; }
+.pf-aurora__blob--sky   { --x: 90%; --y: 15%; --c: var(--pf-sky);   --dx: -13vw; --dy: 14vh;  --t: 32s; --d: -21s; }
+.pf-aurora__blob--mint  { --x: 20%; --y: 90%; --c: var(--pf-mint);  --dx: 12vw;  --dy: -13vh; --t: 35s; --d: -33s; }
+.pf-aurora__blob--lilac { --x: 85%; --y: 85%; --c: var(--pf-lilac); --dx: -15vw; --dy: -11vh; --t: 37s; --d: -4s; }
+.pf-aurora__blob--peach { --x: 50%; --y: 50%; --c: var(--pf-peach); --dx: 13vw;  --dy: 12vh;  --t: 26s; --d: -15s; --w: 48vmax; --h: 36vmax; --o: 0.55; }
+.pf-aurora__blob--rose  { --x: 30%; --y: 70%; --c: var(--pf-rose);  --dx: -12vw; --dy: -12vh; --t: 40s; --d: -27s; --w: 44vmax; --h: 36vmax; --o: 0.55; }
+
+@keyframes aurora-drift {
+  0%   { transform: translate3d(-50%, -50%, 0) scale(1); }
+  33%  { transform: translate3d(calc(-50% + var(--dx)), calc(-50% + var(--dy)), 0) scale(1.1); }
+  66%  { transform: translate3d(calc(-50% - var(--dx) * 0.7), calc(-50% + var(--dy) * 0.6), 0) scale(0.94); }
+  100% { transform: translate3d(-50%, -50%, 0) scale(1); }
 }
 
-/* Two non-synchronised animation tracks give the aurora that "breathing +
-   drifting" feel without ever touching layout. Only `transform` moves, so
-   every frame is a GPU composite — no repaint, no reflow, no jank. */
-@keyframes aurora-a {
-  0%   { transform: translate3d(0,     0,    0) scale(1)    rotate(0deg); }
-  25%  { transform: translate3d(-6%,   3%,   0) scale(1.08) rotate(0.6deg); }
-  50%  { transform: translate3d(4%,   -4%,   0) scale(1.12) rotate(-0.5deg); }
-  75%  { transform: translate3d(-3%,   5%,   0) scale(1.06) rotate(0.4deg); }
-  100% { transform: translate3d(0,     0,    0) scale(1)    rotate(0deg); }
-}
-
-@keyframes aurora-b {
-  0%   { transform: translate3d(0,     0,    0) scale(1.05) rotate(0deg); }
-  33%  { transform: translate3d(5%,    4%,   0) scale(1.15) rotate(-0.7deg); }
-  66%  { transform: translate3d(-4%,  -5%,   0) scale(1.08) rotate(0.6deg); }
-  100% { transform: translate3d(0,     0,    0) scale(1.05) rotate(0deg); }
-}
-
-/* Respect users who prefer no motion — keeps the multi-colour look, kills
-   the animation. */
+/* Respect users who prefer no motion: keeps the multi-colour look, stops the movement. */
 @media (prefers-reduced-motion: reduce) {
-  body::before, body::after { animation: none; }
+  .pf-aurora__blob { animation: none; }
 }
 
 button {
