@@ -310,7 +310,7 @@
 .pf-col__body .pf-card {
   flex: none;
   width: 232px;
-  padding: 6px 10px;
+  padding: 5px 8px 5px 10px; /* card = 38px icon tile + 10px + 2px border = 50px tall */
   border-radius: 12px;
   scroll-snap-align: start;
 }

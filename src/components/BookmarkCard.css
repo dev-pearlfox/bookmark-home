@@ -5,7 +5,7 @@
   display: flex;
   align-items: stretch;
   gap: 8px;
-  padding: 12px;
+  padding: 5px 8px 5px 10px; /* small right padding: the name may run almost to the edge */
   border-radius: var(--r-md);
   background: var(--surface-panel);
   border: var(--border-glass);
@@ -47,12 +47,11 @@
   cursor: inherit;
 }
 
-/* The icon is as big as the card allows. 47px is the card's content height
-   in a column (set by the two stacked action chips), so the row stays 61px.
-   The tile is just a thin frame around a 38px icon. */
+/* The icon tile sets the card's height: 38px tile + 5px padding top and bottom
+   + 1px border top and bottom = a 50px card. The icon fills the whole tile (38px). */
 .pf-card__favicon {
-  width: 47px;
-  height: 47px;
+  width: 38px;
+  height: 38px;
   border-radius: 12px;
   display: grid;
   place-items: center;
@@ -85,7 +84,7 @@
 }
 
 /* One line, fixed row height. A long title shows as much as fits and is then
-   simply cut off (no "..."); the full text is in the title tooltip. */
+   simply cut off (no "..."); the full text and the address are in the card's hover tooltip. */
 .pf-card__title {
   font-size: 14px;
   font-weight: 600;
@@ -95,26 +94,23 @@
   text-overflow: clip;
 }
 
-.pf-card__domain {
-  margin-top: 3px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: var(--ink-500);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Stacked action buttons (edit on top, delete on bottom) */
+/* Stacked action buttons (reorder handle on top, edit below). They float over
+   the card's right edge instead of taking a column, so while they are hidden
+   the name can use the whole card width. On hover/focus the pencil appears and
+   the end of the name fades out underneath it (see the mask rule below; the
+   full name is in the tooltip). */
 .pf-card__actions {
-  align-self: stretch;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 6px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
+  padding: 0 3px;
+  border-radius: 9px;
   opacity: 0;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
@@ -124,9 +120,17 @@
 .pf-card:hover .pf-card__actions,
 .pf-card:focus-within .pf-card__actions { opacity: 1; }
 
+/* While the pencil is showing, the last 36px of the name fade out so the two
+   never overlap. Only the name is faded, so there is no backing patch. */
+.pf-card:hover .pf-card__title,
+.pf-card:focus-within .pf-card__title {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent calc(100% - 28px));
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent calc(100% - 28px));
+}
+
 .pf-card__action {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   padding: 0;
   display: grid;
   place-items: center;
@@ -162,23 +166,32 @@
   border-color: transparent;
 }
 
+/* The reorder handle is never drawn for mouse users: press-and-hold on the card
+   drags it instead, so hovering shows only the edit pencil. The handle stays in
+   the page for keyboard and screen-reader users (it carries the drag-and-drop
+   keyboard controls) and shows again when it has keyboard focus. */
+.pf-card__action--handle:not(:focus-visible) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The one visible button: the edit pencil. */
+.pf-card__action--edit { width: 24px; height: 24px; }
+
 /* Touch screens (no hover, or a finger as the main pointer).
    - The edit button is always visible: there is no hover to reveal it.
-   - It is 40px, a comfortable tap target.
-   - The reorder handle is hidden: press-and-hold on the card drags instead.
-     It stays in the page for keyboard and screen-reader users, and shows again
-     when it has keyboard focus. */
+   - It is 40px, a comfortable tap target. */
 @media (hover: none), (pointer: coarse) {
   .pf-card__actions { opacity: 1; justify-content: center; }
   .pf-card__action--edit { width: 40px; height: 40px; border-radius: 12px; }
   .pf-card__action--edit svg { width: 18px; height: 18px; }
-  .pf-card__action--handle:not(:focus-visible) {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    opacity: 0;
-    pointer-events: none;
+  .pf-card__title {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 52px), transparent calc(100% - 44px));
+    mask-image: linear-gradient(to right, #000 calc(100% - 52px), transparent calc(100% - 44px));
   }
 }

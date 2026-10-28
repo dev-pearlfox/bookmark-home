@@ -21,15 +21,13 @@ const CardContent = memo(function CardContent({ bookmark, onEdit, setActivatorNo
       href={bookmark.url}
       target="_blank"
       rel="noopener noreferrer"
+      title={`${label} (${domain})`} /* the address shows only on hover, not on the card */
     >
       <div className="pf-card__favicon">
         <Favicon key={`${bookmark.url}|${bookmark.favicon}`} bookmark={bookmark} label={label} />
       </div>
       <div className="pf-card__meta">
-        <div className="pf-card__title" title={label}>{label}</div>
-        <div className="pf-card__domain">
-          <span>{domain}</span>
-        </div>
+        <div className="pf-card__title">{label}</div>
       </div>
     </a>
 
@@ -43,7 +41,7 @@ const CardContent = memo(function CardContent({ bookmark, onEdit, setActivatorNo
           title="Drag to reorder • or press Space, then use the arrow keys"
           {...attributes}
         >
-          <GripVertical size={13} />
+          <GripVertical size={11} />
         </button>
         {onEdit && (
           <button
@@ -57,7 +55,7 @@ const CardContent = memo(function CardContent({ bookmark, onEdit, setActivatorNo
             aria-label={`Edit ${bookmark.title}`}
             title="Edit bookmark"
           >
-            <Pencil size={13} />
+            <Pencil size={11} />
           </button>
         )}
       </div>
