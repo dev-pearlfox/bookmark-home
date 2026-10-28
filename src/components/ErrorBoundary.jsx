@@ -40,7 +40,7 @@ export default class ErrorBoundary extends Component {
         <div className="pf-error__card glass-strong">
           <h1>Something went wrong</h1>
           <p>
-            Bookmark Home hit an unexpected error. Your bookmarks are still saved —
+            LinkX hit an unexpected error. Your bookmarks are still saved —
             reloading usually fixes it.
           </p>
           <div className="pf-error__actions">

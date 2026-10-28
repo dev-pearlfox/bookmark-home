@@ -111,7 +111,7 @@ export async function chooseBackupFile(initialContentJson) {
     const handle = await window.showSaveFilePicker({
       suggestedName: 'bookmark-home-backup.json',
       types: [
-        { description: 'Bookmark Home backup', accept: { 'application/json': ['.json'] } },
+        { description: 'LinkX backup', accept: { 'application/json': ['.json'] } },
       ],
     });
     if (!(await ensurePermission(handle, 'readwrite'))) return null;
@@ -131,7 +131,7 @@ export async function chooseBackupFile(initialContentJson) {
  * Ask the user to point at an existing backup file (for restore-after-wipe).
  * Returns:
  *   { name, state }  valid backup — also adopted as the ongoing backup file
- *   { invalid: true } file isn't a Bookmark Home backup — NOT adopted, so we
+ *   { invalid: true } file isn't a LinkX backup — NOT adopted, so we
  *                     never start overwriting some unrelated JSON file
  *   null              cancelled / unsupported / permission denied
  */
@@ -140,7 +140,7 @@ export async function pickAndReadBackupFile() {
   try {
     const [handle] = await window.showOpenFilePicker({
       types: [
-        { description: 'Bookmark Home backup', accept: { 'application/json': ['.json'] } },
+        { description: 'LinkX backup', accept: { 'application/json': ['.json'] } },
       ],
       multiple: false,
     });

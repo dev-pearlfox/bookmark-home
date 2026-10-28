@@ -60,7 +60,7 @@ export default function BackupControl({ getStateSnapshot, onRestore }) {
     return withBusy(async () => {
       const res = await pickAndReadBackupFile();
       if (res?.invalid) {
-        alert("That file doesn't look like a Bookmark Home backup, so I left everything as it was.");
+        alert("That file doesn't look like a LinkX backup, so I left everything as it was.");
       } else if (res?.state) {
         onRestore(res.state);
         setFileName(res.name);

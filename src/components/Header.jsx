@@ -56,7 +56,7 @@ export default function Header({
           <Sparkles size={20} strokeWidth={2.2} />
         </div>
         <div className="pf-header__titles">
-          <h1>Bookmark Home</h1>
+          <h1>LinkX</h1>
           <p>Your calm, curated corner of the web · <span>{bookmarkCount}</span> saved</p>
         </div>
       </div>
